@@ -23,9 +23,7 @@ mongodb:
   containerSecurityContext:
     privileged: true
   image:
-    registry: docker.io
-    repository: bitnamilegacy/mongodb
-    tag: 4.4.1
+    tag: latest
   persistence:
     existingClaim: open5gs-mongodb-claim
   enabled: true
