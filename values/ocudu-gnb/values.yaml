@@ -531,6 +531,7 @@ config:
                 # Network slicing configuration
                 tai_slice_support_list:
                   - sst: 1
+                    sd: 1
 
     ru_ofh:
       t1a_max_cp_dl: 535
