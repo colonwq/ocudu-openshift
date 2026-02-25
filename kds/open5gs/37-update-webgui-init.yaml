@@ -1,0 +1,11 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: open5gs-webui
+  namespace: open5gs
+spec:
+  template:
+    spec:
+      initContainers:
+        - name: init
+          image: docker.io/bitnamilegacy/mongodb:4.4.1

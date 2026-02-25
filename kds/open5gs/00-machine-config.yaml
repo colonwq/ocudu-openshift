@@ -1,0 +1,34 @@
+apiVersion: machineconfiguration.openshift.io/v1
+kind: MachineConfig
+metadata:
+  labels:
+    machineconfiguration.openshift.io/role: master
+  name: 00-master-custom-network-sctp-storage
+spec:
+  config:
+    ignition:
+      version: 3.2.0
+    storage:
+      # Added directory creation for MongoDB PV
+      directories:
+        - path: /mnt/open5gs-mongodb-pv
+          mode: 0777
+      files:
+        # 1. MTU Configuration for enp1s0
+        - contents:
+            source: data:text/plain;charset=utf-8;base64,W2Nvbm5lY3Rpb25lXQppZD1lbnAxczAKey1kZXZpY2U9ZW5wMXMwCnR5cGU9ZXRoZXJuZXQKCltldGhlcm5ldF0KbXR1PTkwMDAKCltpcHY0XQptZXRob2Q9YXV0bwoKW2lwdjZdCm1ldGhvZD1hdXRvCg==
+          mode: 0600
+          overwrite: true
+          path: /etc/NetworkManager/system-connections/enp1s0.nmconnection
+        
+        # 2. Un-blacklist SCTP module
+        - contents:
+            source: data:,
+          mode: 420
+          path: /etc/modprobe.d/sctp-blacklist.conf
+        
+        # 3. Load SCTP module at boot
+        - contents:
+            source: data:text/plain;charset=utf-8,sctp
+          mode: 420
+          path: /etc/modules-load.d/sctp-load.conf

@@ -1,0 +1,7 @@
+mongodb:
+  containerSecurityContext:
+    privileged: true
+  image:
+    tag: latest
+  persistence:
+    existingClaim: open5gs-mongodb-claim
