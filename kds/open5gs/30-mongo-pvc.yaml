@@ -4,9 +4,10 @@ metadata:
   name: open5gs-mongodb-claim
   namespace: open5gs
 spec:
-  storageClassName: manual
   accessModes:
-    - ReadWriteMany
+    - ReadWriteOnce
+  volumeMode: Filesystem
   resources:
     requests:
-      storage: 10Gi
+      storage: 20Gi
+  storageClassName: lvms-vg1  # Replace with your actual LVM StorageClass name

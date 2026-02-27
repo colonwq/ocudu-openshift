@@ -1,0 +1,49 @@
+---
+apiVersion: sriovnetwork.openshift.io/v1
+kind: SriovNetworkNodePolicy
+metadata:
+  name: pci-sriov-net-ens1f0
+  namespace: openshift-sriov-network-operator 
+spec:
+  resourceName: pci_sriov_net_enp1s0
+  nodeSelector:
+    feature.node.kubernetes.io/network-sriov.capable: "true" 
+  priority: 10
+  mtu: 9000
+  needVhostNet: false 
+  numVfs: 16
+  externallyManaged: false 
+  nicSelector: 
+    pfNames: ["enp1s0#0-15"]
+  deviceType: vfio-pci
+  isRdma: false 
+  excludeTopology: false 
+---
+apiVersion: sriovnetwork.openshift.io/v1
+kind: SriovNetwork
+metadata:
+  name: sriov-ocudu
+  namespace: openshift-sriov-network-operator 
+spec:
+  resourceName: pci_sriov_net_enp1s0
+  networkNamespace: ocudu
+  spoofChk: "on"
+  ipam: |-
+    {}
+  linkState: "auto"
+  trust: "off"
+  capabilities: '{"mac": true}'
+---
+apiVersion: sriovnetwork.openshift.io/v1
+kind: SriovOperatorConfig
+metadata:
+  name: default
+  namespace: openshift-sriov-network-operator
+spec:
+  disableDrain: false
+  enableInjector: true
+  enableOperatorWebhook: true
+  logLevel: 2
+  featureGates:
+    metricsExporter: false
+

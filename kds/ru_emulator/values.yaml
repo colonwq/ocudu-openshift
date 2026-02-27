@@ -1,0 +1,177 @@
+#
+# Copyright 2021-2026 Software Radio Systems Limited
+#
+# By using this file, you agree to the terms and conditions set
+# forth in the LICENSE file which can be found at the top level of
+# the distribution.
+#
+
+# -- Number of pod replicas
+# For load testing, increase this value
+# @default -- `1` (single instance)
+replicaCount: 1
+
+# -- Container image configuration
+image:
+  # -- Container image repository
+  repository: quay.io/rh_ee_chwheele/ocudu
+  # -- Image pull policy
+  pullPolicy: IfNotPresent
+  # -- Image tag (overrides Chart appVersion if set)
+  # @default -- Chart appVersion
+  tag: 2026.02.04
+
+# -- Image pull secrets for private registries
+# @default -- `[]` (no pull secrets)
+imagePullSecrets: []
+
+# -- Override the name of the chart
+# @default -- Chart name
+nameOverride: ""
+
+# -- Override the full name of resources
+# @default -- Release name + chart name
+fullnameOverride: ""
+
+# -- ConfigMap name override
+# Useful for pinning specific configuration via Terraform or GitOps
+# Example:
+# ```yaml
+# configmap:
+#   nameOverride: "ru-emu-srskit-rack1-config"
+# ```
+# @default -- `{}` (use generated name)
+configmap: {}
+# To pin a custom name (e.g., via Terraform --set):
+# configmap:
+#   nameOverride: "ru-emu-srskit-rack1-config"
+
+# -- Additional pod annotations
+# @default -- `{}` (no additional annotations)
+#podAnnotations: {"k8s.v1.cni.cncf.io/networks": '[{"name": "sriov-ocudu", "mac": "fe:ed:be:ef:42:42"}]'}
+podAnnotations: {}
+
+# -- Pod-level security context
+# @default -- `{}` (no pod security context)
+podSecurityContext: {}
+
+# -- Container-level security context for hostNetwork mode
+# RU emulator requires privileged access for DPDK and network configuration
+securityContext:
+  # -- Additional capabilities for network and system operations
+  capabilities:
+    add: ["SYS_NICE", "NET_ADMIN"]
+  # -- Run container in privileged mode
+  allowPrivilegeEscalation: true
+  privileged: true
+
+
+# -- Alternative security context for SR-IOV mode
+# When using SR-IOV, privileged mode is not required
+# Uncomment and use this configuration if SR-IOV is enabled
+#securityContext:
+#  capabilities:
+#    add:
+#      - IPC_LOCK
+#      - SYS_ADMIN
+#      - SYS_RAWIO
+#      - NET_RAW
+#      - SYS_NICE
+#  privileged: false
+
+# -- Resource requests and limits
+# Example:
+# ```yaml
+# resources:
+#   limits:
+#     cpu: 4
+#     memory: 8Gi
+#     hugepages-1Gi: 2Gi
+#   requests:
+#     cpu: 4
+#     memory: 8Gi
+#     hugepages-1Gi: 2Gi
+# ```
+# @default -- `{}` (no resource constraints)
+resources: {}
+
+# -- Node selector for pod assignment
+# Schedule pods only on nodes with matching labels
+# @default -- `{}` (no node selector)
+nodeSelector: {}
+
+# -- Tolerations for pod assignment
+# Allows pods to be scheduled on nodes with matching taints
+# @default -- `[]` (no tolerations)
+tolerations: []
+
+# -- Pod affinity configuration for advanced scheduling
+# @default -- `{}` (no affinity rules)
+affinity: {}
+
+# -- Network configuration
+network:
+  # -- Enable host network mode for direct host network access
+  # Disable this when using SR-IOV plugin
+  hostNetwork: false
+
+# -- SR-IOV configuration
+# Provides high-performance network interfaces via SR-IOV Virtual Functions (VFs)
+# When enabled, the entrypoint script automatically detects VF PCI address and MAC
+sriovConfig:
+  # -- Enable SR-IOV network device plugin
+  # Requires SR-IOV device plugin deployed in cluster
+  # When enabled, set network.hostNetwork: false
+  enabled: false
+  
+  # -- Extended resource name from SR-IOV device plugin
+  # This must match the resource name configured in your SR-IOV device plugin
+  # Common values:
+  #   - intel.com/intel_sriov_netdevice (Intel NICs)
+  #   - mellanox.com/cx5_sriov_switchdev (Mellanox NICs)
+  # Check available resources: kubectl get node <node-name> -o json | jq '.status.allocatable'
+  extendedResourceName: "openshift.io/pci_sriov_net_enp1s0"
+  
+  # -- Number of SR-IOV VFs to request per pod
+  # For single-cell emulator, typically 1
+  # @default -- `1`
+  vfCount: 1
+
+# -- RU emulator configuration
+# OpenFronthaul Radio Unit emulator settings
+config:
+  # -- Logging configuration
+  log:
+    # -- Log file path inside container
+    filename: /tmp/ru_em.log
+    # -- Log level (debug, info, warning, error)
+    level: warning
+
+  # -- DPDK configuration (optional)
+  # Uncomment to customize DPDK EAL (Environment Abstraction Layer) arguments
+  #dpdk:
+  #  # EAL arguments for CPU core binding
+  #  eal_args: "--lcores (0-1)@(0-15)"
+
+  # -- RU emulator cell configuration
+  ru_emu:
+    # -- List of emulated RU cells
+    # Each cell represents one OpenFronthaul connection to a DU
+    cells:
+    # -- Cell bandwidth in MHz
+    - bandwidth: 100
+      # -- Network interface name for OpenFronthaul traffic
+      network_interface: "enp1s0"
+      # -- MAC address of the RU (emulated device)
+      ru_mac_addr: "b4:96:91:d8:8f:22"
+      # -- MAC address of the DU (destination)
+      du_mac_addr: "de:ad:be:ef:ca:fe"
+      # -- VLAN tag for traffic isolation
+      #vlan_tag: 6
+      # -- Uplink port IDs for OpenFronthaul
+      ul_port_id: [0]
+      # -- Compression method for uplink IQ data
+      # Options: none, bfp (block floating point), bfp_sel
+      compr_method_ul: "bfp"
+      # -- Compression bitwidth for uplink (1-16 bits)
+      compr_bitwidth_ul: 9

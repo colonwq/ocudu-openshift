@@ -9,10 +9,6 @@ spec:
     ignition:
       version: 3.2.0
     storage:
-      # Added directory creation for MongoDB PV
-      directories:
-        - path: /mnt/open5gs-mongodb-pv
-          mode: 0777
       files:
         # 1. MTU Configuration for enp1s0
         - contents:
