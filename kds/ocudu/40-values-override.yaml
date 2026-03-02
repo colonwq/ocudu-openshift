@@ -7,6 +7,17 @@ securityContext:
   privileged: true
   runAsUser: 0
 
+persistence:
+  enabled: true             # Changed from false to true
+  type: pvc                 # Changed from hostPath to pvc
+  pvc:
+    name: "gnb-claim"       # Added the specific name you requested
+    storageClassName: "lvms-vg1" # Set to your LVM storage class
+    accessMode: ReadWriteOnce
+    size: 5Gi              # Updated to match your earlier 20G requirement
+  mountPath: "/tmp"         # Preserved as requested
+  preserveOldLogs: true
+
 config:
   # -- Main gNB configuration file
   # @default -- See values.yaml for complete example
