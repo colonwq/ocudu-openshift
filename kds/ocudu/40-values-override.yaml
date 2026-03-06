@@ -1,11 +1,13 @@
 image:
   repository: quay.io/kschinck/gnb
-  tag: "20260209"
+  tag: "20260306c02"
 
 securityContext:
   allowPrivilegeEscalation: true
   privileged: true
   runAsUser: 0
+  capabilities:
+    add: ["SYS_PTRACE"]
 
 persistence:
   enabled: true             # Changed from false to true
@@ -19,7 +21,6 @@ persistence:
   preserveOldLogs: false
 
 imagePullSecrets: []
-
 
 # Performance and Scheduling Overrides
 runtimeClassName: performance-gnb-performance-profile # Must match the metadata.name of your PerformanceProfile
