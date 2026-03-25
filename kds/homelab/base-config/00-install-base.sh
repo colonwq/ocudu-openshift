@@ -69,9 +69,14 @@ oc apply -f 30-sriov-subscription.yaml
 #wait for the csv to be ready
 wait_for_csv "openshift-sriov-network-operator" "sriov-network-operator"
 
+echo "Applying default SriovOperatorConfig (required for policy / SriovNetworkNodeState reconciliation)"
+oc apply -f 31-sriov-operator-config.yaml
+
 ##performance tuning
 echo "Installing Performancing tuning settings"
 oc apply -f 50-performance.yaml
+echo "Applying 1G hugepage kernel args (DPDK/gNB); see 51-master-gnb-hugepages-kargs.yaml"
+oc apply -f 51-master-gnb-hugepages-kargs.yaml
 
 echo "Waiting for things to begin"
 sleep 30

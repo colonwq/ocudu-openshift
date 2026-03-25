@@ -1,0 +1,14 @@
+# Required before SriovNetworkNodePolicy reconciles; without it the operator logs:
+#   default SriovOperatorConfig object not found, cannot reconcile SriovNetworkNodePolicies
+apiVersion: sriovnetwork.openshift.io/v1
+kind: SriovOperatorConfig
+metadata:
+  name: default
+  namespace: openshift-sriov-network-operator
+spec:
+  disableDrain: false
+  enableInjector: true
+  enableOperatorWebhook: true
+  logLevel: 2
+  featureGates:
+    metricsExporter: false

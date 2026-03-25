@@ -19,18 +19,8 @@ spec:
     highPowerConsumption: true
     perPodPowerManagement: false
 
-  # 1G hugepages for DPDK / ocudu-gnb (tune count vs. available RAM).
-  # On multi-NUMA hosts the operator may leave kernelArguments null without `node:`;
-  # if `oc get machineconfig 50-performance-gnb-performance-profile -o jsonpath='{.spec.kernelArguments}'`
-  # stays null after apply/reboot, use 51-master-gnb-hugepages-kargs.yaml or split `count` across NUMA nodes.
-  hugepages:
-    defaultHugepagesSize: 1G
-    pages:
-      - size: 1G
-        count: 8
-        node: 0
+  # 1G hugepages: set via MachineConfig 51-master-gnb-hugepages-kargs.yaml (applied in 00-install-base.sh).
 
-  # Node labels this profile applies to (not the same field as MachineConfig pool labels in 00-machine-config.yaml).
   nodeSelector:
     node-role.kubernetes.io/master: ""
 ---

@@ -1,6 +1,4 @@
-# Fallback: only if PerformanceProfile still yields kernelArguments: null on
-#   oc get machineconfig 50-performance-gnb-performance-profile -o yaml
-# Matches gnb-performance-profile hugepages (8x1G). Remove if duplicate with generated performance MC.
+# 8x 1G hugepages at boot for DPDK / ocudu-gnb. Applied by 00-install-base.sh after 50-performance.yaml.
 ---
 apiVersion: machineconfiguration.openshift.io/v1
 kind: MachineConfig
