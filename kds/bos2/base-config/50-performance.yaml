@@ -1,0 +1,55 @@
+---
+apiVersion: performance.openshift.io/v2
+kind: PerformanceProfile
+metadata:
+  name: gnb-performance-profile
+spec:
+  cpu:
+    # 64 logical CPUs (nproc): reserve low cores for OS/OpenShift; isolate the rest for gNB/DPDK
+    isolated: "4-63"
+    reserved: "0-3"
+
+  # CRITICAL: 5G RAN software usually requires Real-Time kernel
+  realTimeKernel:
+    enabled: true
+
+  # Set to 'low-latency' to disable power-saving C-states
+  workloadHints:
+    realTime: true
+    highPowerConsumption: true
+    perPodPowerManagement: false
+
+  # 1G hugepages for DPDK / ocudu-gnb (tune count vs. available RAM)
+  hugepages:
+    defaultHugepagesSize: 1G
+    pages:
+      - size: 1G
+        count: 8
+
+  nodeSelector:
+    node-role.kubernetes.io/master: ""
+---
+apiVersion: tuned.openshift.io/v1
+kind: Tuned
+metadata:
+  name: gnb-performance
+  namespace: openshift-cluster-node-tuning-operator
+spec:
+  profile:
+  - name: openshift-gnb-performance
+    data: |
+      [main]
+      summary=Optimized for 5G GNB Jumbo Frames
+      include=openshift-node
+      [cpu]
+      force_latency=1
+      governor=performance
+      energy_perf_bias=performance
+      [sysctl]
+      net.core.wmem_max=16777216
+      net.core.rmem_max=16777216
+  recommend:
+  - machineConfigLabels:
+      machineconfiguration.openshift.io/role: master
+    priority: 10
+    profile: openshift-gnb-performance

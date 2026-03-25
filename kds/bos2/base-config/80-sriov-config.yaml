@@ -1,0 +1,39 @@
+---
+apiVersion: sriovnetwork.openshift.io/v1
+kind: SriovNetworkNodePolicy
+metadata:
+  name: sriov-policy-node-2
+  namespace: openshift-sriov-network-operator 
+spec:
+  # Resource name for pod scheduling (must match openshift.io/pci_sriov_net_<resourceName> on nodes)
+  resourceName: sriov_gnb_ens1f0
+  nodeSelector:
+    kubernetes.io/hostname: "node-2.example.com"
+  priority: 10
+  mtu: 9000
+  numVfs: 16
+  nicSelector:
+    # PF: ens1f0 (PCI NIC; altname enp16s0f0). If ens1f0 is attached to ovs-system, SR-IOV requires a dedicated PF or reconfig.
+    pfNames: ["ens1f0#0-15"]
+  # vfio-pci is required for high-performance gNB pod access
+  deviceType: vfio-pci
+  isRdma: false 
+  needVhostNet: false 
+---
+apiVersion: sriovnetwork.openshift.io/v1
+kind: SriovNetwork
+metadata:
+  name: sriov-ocudu
+  namespace: openshift-sriov-network-operator 
+spec:
+  resourceName: sriov_gnb_ens1f0
+  networkNamespace: ocudu
+  vlan: 50
+  spoofChk: "on"
+  trust: "on"
+  ipam: |
+    {
+      "type": "static"
+    }
+  linkState: "auto"
+  capabilities: '{"mac": true, "ips": true}'

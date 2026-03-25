@@ -1,0 +1,17 @@
+apiVersion: lvm.topolvm.io/v1alpha1
+kind: LVMCluster
+metadata:
+  name: lvmcluster
+  namespace: openshift-storage
+spec:
+  storage:
+    deviceClasses:
+      - name: vg1
+        # Adding a selector ensures we don't accidentally grab the OS disk
+        deviceSelector:
+          paths:
+            - /dev/nvme1n1
+        thinPoolConfig:
+          name: thin-pool-1
+          overprovisionRatio: 10
+          sizePercent: 90

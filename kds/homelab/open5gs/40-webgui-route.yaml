@@ -1,0 +1,12 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: open5gs-webui-http
+  namespace: open5gs
+spec:
+  to:
+    kind: Service
+    name: open5gs-webui
+  port:
+    targetPort: 9999
+  # If you don't define a 'host', OpenShift generates one automatically

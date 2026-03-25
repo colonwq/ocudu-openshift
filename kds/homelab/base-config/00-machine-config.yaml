@@ -1,0 +1,35 @@
+apiVersion: machineconfiguration.openshift.io/v1
+kind: MachineConfig
+metadata:
+  labels:
+    machineconfiguration.openshift.io/role: master
+  name: 00-master-custom-sctp-gnb-params
+spec:
+  config:
+    ignition:
+      version: 3.2.0
+    passwd:
+      users:
+        - name: root
+          # Password: redhat11
+          passwordHash: "$6$vS7u9M1m$E6mXjB6N4tYpX8M0fL4k8S3f9G2H1R6V5u4E3w2Q1Z0P9O8N7M6L5K4J3I2H1G0F.D1"
+    storage:
+      files:
+        # 1. Un-blacklist SCTP module
+        - contents:
+            source: data:,
+          mode: 420
+          path: /etc/modprobe.d/sctp-blacklist.conf
+          overwrite: true
+        # 2. Load SCTP module at boot
+        - contents:
+            source: data:text/plain;charset=utf-8,sctp
+          mode: 420
+          path: /etc/modules-load.d/sctp-load.conf
+          overwrite: true
+        # 3. Sysctl optimizations for ocudu-gnb (16MB buffers, high backlog)
+        - contents:
+            source: data:,net.core.wmem_max%3D16777216%0Anet.core.rmem_max%3D16777216%0Anet.core.netdev_max_backlog%3D100000
+          mode: 420
+          path: /etc/sysctl.d/99-gnb-network.conf
+          overwrite: true

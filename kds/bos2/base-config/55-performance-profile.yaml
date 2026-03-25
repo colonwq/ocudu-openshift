@@ -1,0 +1,26 @@
+# Same PerformanceProfile as 50-performance.yaml (64 CPUs; 00-install-base.sh applies 50-performance.yaml only).
+apiVersion: performance.openshift.io/v2
+kind: PerformanceProfile
+metadata:
+  name: gnb-performance-profile
+spec:
+  cpu:
+    isolated: "4-63"
+    reserved: "0-3"
+
+  realTimeKernel:
+    enabled: true
+
+  hugepages:
+    defaultHugepagesSize: 1G
+    pages:
+      - size: 1G
+        count: 8
+
+  workloadHints:
+    realTime: true
+    highPowerConsumption: true
+    perPodPowerManagement: false
+
+  nodeSelector:
+    node-role.kubernetes.io/master: ""

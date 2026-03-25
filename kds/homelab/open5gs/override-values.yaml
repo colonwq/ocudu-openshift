@@ -1,0 +1,27 @@
+mongodb:
+  containerSecurityContext:
+    privileged: true
+  image:
+    tag: latest
+  persistence:
+    existingClaim: open5gs-mongodb-claim
+
+webui:
+  enabled: true
+  services:
+    http:
+      # Changed from NodePort to ClusterIP for cleaner Route integration
+      type: ClusterIP 
+      ports:
+        http: 9999 # The internal port the Pod is listening on
+  # nodePorts section can be removed or ignored as the Route replaces it
+  ingress:
+    enabled: true
+    # This specific key depends on your Helm chart's template support for OpenShift
+    annotations:
+      route.openshift.io/termination: "edge" 
+    hosts:
+      - host: webui-open5gs.apps.sno.example.com
+        paths:
+          - path: /
+            pathType: ImplementationSpecific

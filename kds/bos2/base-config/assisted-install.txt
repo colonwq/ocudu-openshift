@@ -1,0 +1,16 @@
+# ens1f0 (altname enp16s0f0); MAC b4:96:91:c4:d2:64 — align with agent-config.yaml
+interfaces:
+  - name: ens1f0
+    type: ethernet
+    state: up
+    mtu: 9000
+  - name: ens1f0.50
+    type: vlan
+    state: up
+    mtu: 9000
+    vlan:
+      base-iface: ens1f0
+      id: 50
+    ipv4:
+      enabled: true
+      dhcp: true

@@ -1,0 +1,20 @@
+# override.yaml
+
+webui:
+  enabled: true
+#  # Helm replaces the entire array with this single-element list
+#  initContainers:
+#    - name: init
+#      image: docker.io/bitnamilegacy/mongodb:4.4.1
+#      # Adding standard command/args often used in this chart to ensure it actually waits
+#      command: ["sh", "-c", "until nc -z mongodb 27017; do echo waiting for mongodb; sleep 2; done;"]
+  
+  ingress:
+    enabled: true
+    annotations:
+      route.openshift.io/termination: "edge"
+    hosts:
+      - host: webui-open5gs.apps.sno.example.com
+        paths:
+          - path: /
+            pathType: ImplementationSpecific

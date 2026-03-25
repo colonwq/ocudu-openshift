@@ -1,0 +1,71 @@
+# -- Container image configuration
+image:
+  # -- Container image repository
+  repository: quay.io/rh_ee_chwheele/ocudu
+  # -- Image pull policy
+  pullPolicy: IfNotPresent
+  # -- Image tag (overrides Chart appVersion if set)
+  # @default -- Chart appVersion
+  tag: 2026.02.04
+
+
+# 1) IMSI and UE Credentials
+ue:
+  config:
+    imsi: "001010000000001"
+    key: "465B5CE8B199B49FAA5F0A2EE238A6BC"
+    opc: "E8ED289DEBA952E4283B54E88E6183CA"
+    # Ensure the slice matches the gNB and MongoDB (sst: 1, sd: 1)
+    snssai:
+      sst: 1
+      sd: 1
+
+# 2 & 3) Fronthaul MAC Addresses
+ru_ofh:
+  interface: "eth0"
+  ru_mac_addr: "52:54:00:1d:f3:8d"
+  du_mac_addr: "0a:58:0a:80:00:84"
+
+# 4) Essential Connectivity Values
+# These ensure the RU-Emulator knows where the gNB is located in the cluster
+gnb:
+  # Use the Service FQDN or the Pod IP of the gNB
+  search_list: 
+    - "ocudu-gnb.ocudu.svc.cluster.local"
+
+# Networking Adjustments for OpenShift
+# Since you aren't using SR-IOV (as per gNB logs), ensure standard networking is active
+sriov:
+  enabled: false
+
+onfig:
+  # -- Logging configuration
+  log:
+    # -- Log file path inside container
+    filename: /tmp/ru_em.log
+    # -- Log level (debug, info, warning, error)
+    level: warning
+
+  # -- DPDK configuration (optional)
+  # Uncomment to customize DPDK EAL (Environment Abstraction Layer) arguments
+  #dpdk:
+  #  # EAL arguments for CPU core binding
+  #  eal_args: "--lcores (0-1)@(0-15)"
+
+  # -- RU emulator cell configuration
+  ru_emu:
+    # -- List of emulated RU cells
+    # Each cell represents one OpenFronthaul connection to a DU
+    cells:
+    # -- Cell bandwidth in MHz
+    - bandwidth: 100
+      # -- Network interface name for OpenFronthaul traffic
+      network_interface: "enp1s0"
+      # -- MAC address of the RU (emulated device)
+      #ru_mac_addr: "b4:96:91:d8:8f:22"
+      ru_mac_addr: "52:54:00:1d:f3:8d"
+      # -- MAC address of the DU (destination)
+      #du_mac_addr: "de:ad:be:ef:ca:fe"
+      du_mac_addr: "0a:58:0a:80:00:84"
+      ul_port_id: [0]
+

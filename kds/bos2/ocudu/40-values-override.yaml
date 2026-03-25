@@ -1,0 +1,152 @@
+image:
+  repository: quay.io/kschinck/gnb
+  #tag: "20260306f01"
+  tag: "20260318r02"
+
+securityContext:
+  allowPrivilegeEscalation: true
+  privileged: true
+  runAsUser: 0
+  capabilities:
+    #add: ["SYS_PTRACE"]
+    add: ["SYS_PTRACE", "SYS_NICE", "NET_ADMIN"]
+
+persistence:
+  enabled: true             # Changed from false to true
+  type: pvc                 # Changed from hostPath to pvc
+  pvc:
+    name: "gnb-claim"       # Added the specific name you requested
+    storageClassName: "lvms-vg1" # Set to your LVM storage class
+    accessMode: ReadWriteOnce
+    size: 5Gi              # Updated to match your earlier 20G requirement
+  mountPath: "/tmp"         # Preserved as requested
+  preserveOldLogs: false
+
+imagePullSecrets: []
+
+# Multus SR-IOV: the pod MUST request the same extended resource as your SriovNetworkNodePolicy
+# for this NAD, or SR-IOV CNI fails with "VF pci addr is required".
+# Verify on a worker: oc describe node <node> | grep -i pci_sriov
+# Example for resourceName sriov_gnb_ens1f0 (see kds/bos2/base-config/80-sriov-config.yaml):
+#   openshift.io/pci_sriov_net_sriov_gnb_ens1f0
+podAnnotations:
+  k8s.v1.cni.cncf.io/networks: ocudu/sriov-ocudu
+
+resources:
+  limits:
+    cpu: 12
+    memory: 16Gi
+    hugepages-1Gi: 2Gi
+    openshift.io/pci_sriov_net_sriov_gnb_ens1f0: "1"
+  requests:
+    cpu: 12
+    memory: 16Gi
+    hugepages-1Gi: 2Gi
+    openshift.io/pci_sriov_net_sriov_gnb_ens1f0: "1"
+
+# Performance and Scheduling Overrides
+runtimeClassName: performance-gnb-performance-profile # Must match the metadata.name of your PerformanceProfile
+
+# gNB PLMN/TAC/slice must align with the open5gs subscriber (see open5gs/60-add-subscriber.sh:
+# IMSI 999700000000001, slice sst 1). ru-emulator uses the same subscriber credentials (ru_emulator/values.yaml ue.config).
+config:
+  # -- Main gNB configuration file
+  # @default -- See values.yaml for complete example
+  gnb-config.yml: |-
+    cu_cp:
+      amf:
+        addr: open5gs-amf-ngap.open5gs.svc.cluster.local
+        port: 38412
+        #bind_addr: 127.0.0.1
+        bind_addr: 0.0.0.0
+        supported_tracking_areas:
+          - tac: 7
+            plmn_list:
+              - plmn: "00101"
+              #- plmn: "99970"
+                # Network slicing configuration (sst 1 matches subscriber in 60-add-subscriber.sh)
+                tai_slice_support_list:
+                  - sst: 1
+                    sd: 1
+
+    ru_ofh:
+      t1a_max_cp_dl: 535
+      t1a_min_cp_dl: 286
+      t1a_max_cp_ul: 535
+      t1a_min_cp_ul: 286
+      t1a_max_up: 390
+      t1a_min_up: 80
+      ta4_max: 500
+      ta4_min: 25
+      is_prach_cp_enabled: false
+      compr_method_ul: bfp
+      compr_bitwidth_ul: 9
+      compr_method_dl: bfp
+      compr_bitwidth_dl: 9
+      compr_method_prach: bfp
+      compr_bitwidth_prach: 9
+      enable_ul_static_compr_hdr: true
+      enable_dl_static_compr_hdr: true
+      iq_scaling: 5.5
+      cells:
+        #- network_interface: enp1s0f0
+        #- network_interface: enp1s0
+        - network_interface: ens1f0
+          ru_mac_addr: "52:54:00:1d:f3:8d"
+          #du_mac_addr: "0a:58:0a:80:00:84"
+          du_mac_addr: "84:47:09:3e:a0:3d"
+          #vlan_tag_cp: 5
+          #vlan_tag_up: 5
+          prach_port_id: [4, 5]
+          dl_port_id: [0, 1, 2, 3]
+          ul_port_id: [0, 1]
+
+    cell_cfg:
+      dl_arfcn: 637212
+      band: 78
+      channel_bandwidth_MHz: 100
+      common_scs: 30
+      plmn: "00101"
+      tac: 7
+      pci: 1
+      nof_antennas_dl: 4
+      nof_antennas_ul: 2
+      prach:
+        prach_config_index: 7
+        prach_root_sequence_index: 1
+        zero_correlation_zone: 0
+        prach_frequency_start: 0
+      tdd_ul_dl_cfg:
+        dl_ul_tx_period: 10
+        nof_dl_slots: 7
+        nof_dl_symbols: 6
+        nof_ul_slots: 2
+        nof_ul_symbols: 4
+
+    log:
+      filename: /tmp/gnb.log
+      all_level: warning
+
+    pcap:
+      mac_enable: false
+      mac_filename: /tmp/gnb_mac.pcap
+      ngap_enable: false
+      ngap_filename: /tmp/gnb_ngap.pcap
+
+    metrics:
+      autostart_stdout_metrics: true
+      enable_json: false
+
+    remote_control:
+      bind_addr: 0.0.0.0
+      enabled: false
+      port: 8001
+
+#    test_mode:
+#      test_ue:
+#        rnti: 0x44
+#        ri: 1 # Set to 2 or 4 for 2 layer or 4 layer MIMO operation
+#        cqi: 15
+#        nof_ues: 1
+#        pusch_active: true
+#        pdsch_active: true

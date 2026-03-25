@@ -1,0 +1,38 @@
+# Host: ens1f0 MAC b4:96:91:c4:d2:64 (altname enp16s0f0); often enslaved to ovs-system on OCP.
+# If MTU 9000 does not apply after reboot, set jumbo via Cluster Network / NMState for OVS, not only this keyfile.
+apiVersion: machineconfiguration.openshift.io/v1
+kind: MachineConfig
+metadata:
+  labels:
+    machineconfiguration.openshift.io/role: master
+  name: 00-master-custom-sctp-gnb-params
+spec:
+  config:
+    ignition:
+      version: 3.2.0
+    storage:
+      files:
+        # 1. Un-blacklist SCTP module
+        - contents:
+            source: data:,
+          mode: 420
+          path: /etc/modprobe.d/sctp-blacklist.conf
+          overwrite: true
+        # 2. Load SCTP module at boot
+        - contents:
+            source: data:text/plain;charset=utf-8,sctp
+          mode: 420
+          path: /etc/modules-load.d/sctp-load.conf
+          overwrite: true
+        # 3. Sysctl optimizations for ocudu-gnb (16MB buffers, high backlog)
+        - contents:
+            source: data:,net.core.wmem_max%3D16777216%0Anet.core.rmem_max%3D16777216%0Anet.core.netdev_max_backlog%3D100000
+          mode: 420
+          path: /etc/sysctl.d/99-gnb-network.conf
+          overwrite: true
+        # 4. MTU 9000 for ens1f0 (NetworkManager keyfile)
+        - contents:
+            source: data:text/plain;charset=utf-8,%5Bconnection%5D%0Aid%3Dens1f0-mtu9000%0Atype%3Dethernet%0Ainterface-name%3Dens1f0%0Aautoconnect%3Dtrue%0A%0A%5Bethernet%5D%0Amtu%3D9000%0A%0A%5Bipv4%5D%0Amethod%3Dauto%0A%0A%5Bipv6%5D%0Amethod%3Dauto%0A
+          mode: 384
+          path: /etc/NetworkManager/system-connections/ens1f0-mtu9000.nmconnection
+          overwrite: true

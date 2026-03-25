@@ -1,0 +1,31 @@
+apiVersion: performance.openshift.io/v2
+kind: PerformanceProfile
+metadata:
+  name: gnb-performance-profile
+spec:
+  # CPU Isolation: Core 0-3 for OS/OpenShift; Cores 4-15 for GNB
+  cpu:
+    isolated: "4-15"
+    reserved: "0-3"
+  
+  # Enables the PREEMPT_RT kernel required for 5G signal timing
+  realTimeKernel:
+    enabled: true
+
+  # Hugepages: This allocates the 1Gi blocks required by the ocudu-gnb
+  hugepages:
+    defaultHugepagesSize: 1G
+    pages:
+      - size: 1G
+        count: 4  # Start with 4GB; increase if your RAM allows
+        node: 0   # Ryzen 7 6800H is a single-node (UMA) architecture
+
+  # Workload Hints for AMD Ryzen/Zen 3 architecture
+  workloadHints:
+    realTime: true
+    highPowerConsumption: true # Keeps the 6800H from dropping clock speeds
+    perPodPowerManagement: false
+
+  # Targeting your SNO node
+  nodeSelector:
+    node-role.kubernetes.io/master: ""

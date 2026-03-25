@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ocudu
+  labels:
+    name: ocudu
+    pod-security.kubernetes.io/enforce: privileged
