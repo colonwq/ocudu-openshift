@@ -73,8 +73,16 @@ wait_for_csv "openshift-sriov-network-operator" "sriov-network-operator"
 echo "Installing Performancing tuning settings"
 oc apply -f 50-performance.yaml
 
-echo "Sleeping for 10 seconds"
-sleep 10
+echo "Waiting for things to begin"
+sleep 30
+
+#Wait for the machine config to apply and the host to reboot.
+echo "Waiting for SNO to finish rebooting..."
+until oc wait mcp master --for='condition=Updated=True' --timeout=10s &> /dev/null; do
+  echo "Node is still updating or rebooting... $(date)"
+  sleep 15
+done
+echo "SNO is back online and Updated!"
 
 #install the lvm storage operator
 echo "Installing LVM Storage operator"
