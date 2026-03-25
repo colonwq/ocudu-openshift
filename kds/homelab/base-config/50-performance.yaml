@@ -28,6 +28,7 @@ spec:
     pages:
       - size: 1G
         count: 8 # Reserve 8GB for the GNB; leave 8GB for OS/other pods
+        node: 0
 
   nodeSelector:
     node-role.kubernetes.io/master: ""

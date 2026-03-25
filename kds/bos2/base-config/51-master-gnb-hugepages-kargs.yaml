@@ -1,0 +1,17 @@
+# Fallback: only if PerformanceProfile still yields kernelArguments: null on
+#   oc get machineconfig 50-performance-gnb-performance-profile -o yaml
+# (e.g. multi-NUMA before NUMA `node:` was fixed). Matches gnb-performance-profile hugepages (8x1G).
+# Do not merge duplicate hugepage reservations: if 50-performance-* already has kernelArguments,
+# skip this file or remove it to avoid double-counting.
+---
+apiVersion: machineconfiguration.openshift.io/v1
+kind: MachineConfig
+metadata:
+  labels:
+    machineconfiguration.openshift.io/role: master
+  name: 51-master-gnb-hugepages-kargs
+spec:
+  kernelArguments:
+    - default_hugepagesz=1G
+    - hugepagesz=1G
+    - hugepages=8

@@ -16,6 +16,7 @@ spec:
     pages:
       - size: 1G
         count: 8
+        node: 0
 
   workloadHints:
     realTime: true
