@@ -103,6 +103,8 @@ oc apply -f 70-nmstate
 #apply the sr-iov config
 echo "Apply SR-IOV config"
 oc apply -f 80-sriov-config.yaml
+echo "Waiting for possible SR-IOV drain/reboot to finish (see 81-wait-after-sriov-apply.sh)"
+bash 81-wait-after-sriov-apply.sh
 
 #creat the LVM storage cluster/strage class
 echo "Creating LVM cluster"
