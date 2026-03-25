@@ -1,6 +1,6 @@
-# If `oc describe node <n> | grep pci_sriov` is empty after apply: run 82-sriov-diagnose.sh <n>.
-# Typical causes: pfNames do not match the host (see `ip -br link` on the node), PF in use by OVS,
-# BIOS SR-IOV off, or numVfs above NIC limit. Extended resource appears only after VFs are created.
+# If `oc describe node <n> | grep pci_sriov` is empty: run 82-sriov-diagnose.sh <n>.
+# Prefer rootDevices (PCI) over pfNames when interface names shift; use 0000:12:00.0 for second NIC (ens2f0).
+# If sync succeeds but allocatable stays empty, check vfio + device-plugin logs (see script).
 ---
 apiVersion: sriovnetwork.openshift.io/v1
 kind: SriovNetworkNodePolicy
@@ -18,8 +18,9 @@ spec:
   mtu: 9000
   numVfs: 16
   nicSelector:
-    # PF: ens1f0 (PCI NIC; altname enp16s0f0). If ens1f0 is attached to ovs-system, SR-IOV requires a dedicated PF or reconfig.
-    pfNames: ["ens1f0#0-15"]
+    # First Intel E810 PF on this HPE host (see SriovNetworkNodeState / lspci). gNB app still uses net name ens1f0 in values.
+    rootDevices:
+      - "0000:10:00.0"
   # vfio-pci is required for high-performance gNB pod access
   deviceType: vfio-pci
   isRdma: false 

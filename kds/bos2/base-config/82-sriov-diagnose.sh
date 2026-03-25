@@ -56,6 +56,22 @@ echo "=== Operator logs (last 40 lines) ==="
 oc logs -n "$NS" deploy/sriov-network-operator --tail=40 2>/dev/null || echo "(no operator deployment logs)"
 echo ""
 
+echo "=== sriov-device-plugin (allocates openshift.io/pci_sriov_net_*) ==="
+if oc get ds sriov-device-plugin -n "$NS" &>/dev/null; then
+  oc logs -n "$NS" daemonset/sriov-device-plugin --tail=80 2>/dev/null || true
+else
+  echo "(no sriov-device-plugin DaemonSet)"
+fi
+echo ""
+
+echo "=== VFIO devices on ${NODE:-first node} (expect VF groups if vfio-pci policy applied) ==="
+if [[ -n "$NODE" ]]; then
+  echo "Run: oc debug node/$NODE -- chroot /host sh -c 'ls -la /dev/vfio 2>/dev/null; ip -br link | grep -E \"^[ev]\"'"
+else
+  echo "Run: oc debug node/<name> -- chroot /host ls -la /dev/vfio"
+fi
+echo ""
+
 echo "=== Config-daemon on ${NODE:-all nodes} (last 30 lines each) ==="
 if [[ -n "$NODE" ]]; then
   pod=$(oc get pods -n "$NS" -l app=sriov-network-config-daemon --field-selector "spec.nodeName=$NODE" -o jsonpath='{.items[0].metadata.name}' 2>/dev/null)

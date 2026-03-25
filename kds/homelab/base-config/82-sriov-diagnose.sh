@@ -54,6 +54,12 @@ echo "=== Operator logs (last 40 lines) ==="
 oc logs -n "$NS" deploy/sriov-network-operator --tail=40 2>/dev/null || true
 echo ""
 
+echo "=== sriov-device-plugin logs ==="
+if oc get ds sriov-device-plugin -n "$NS" &>/dev/null; then
+  oc logs -n "$NS" daemonset/sriov-device-plugin --tail=80 2>/dev/null || true
+fi
+echo ""
+
 echo "=== Config-daemon logs ==="
 if [[ -n "$NODE" ]]; then
   pod=$(oc get pods -n "$NS" -l app=sriov-network-config-daemon --field-selector "spec.nodeName=$NODE" -o jsonpath='{.items[0].metadata.name}' 2>/dev/null)
