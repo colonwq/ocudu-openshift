@@ -7,8 +7,9 @@ metadata:
 spec:
   # Resource name for pod scheduling
   resourceName: sriov_gnb_enp2s0
+  # Match SNO / control-plane node. For multi-node, narrow to the target worker/hostname.
   nodeSelector:
-    kubernetes.io/hostname: "node-2.example.com"
+    node-role.kubernetes.io/master: ""
   priority: 10
   mtu: 9000
   numVfs: 16
