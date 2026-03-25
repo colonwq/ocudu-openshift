@@ -1,3 +1,4 @@
+# If `oc describe node <n> | grep pci_sriov` is empty: run 82-sriov-diagnose.sh <n>.
 ---
 apiVersion: sriovnetwork.openshift.io/v1
 kind: SriovNetworkNodePolicy

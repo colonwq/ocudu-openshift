@@ -1,3 +1,6 @@
+# If `oc describe node <n> | grep pci_sriov` is empty after apply: run 82-sriov-diagnose.sh <n>.
+# Typical causes: pfNames do not match the host (see `ip -br link` on the node), PF in use by OVS,
+# BIOS SR-IOV off, or numVfs above NIC limit. Extended resource appears only after VFs are created.
 ---
 apiVersion: sriovnetwork.openshift.io/v1
 kind: SriovNetworkNodePolicy
