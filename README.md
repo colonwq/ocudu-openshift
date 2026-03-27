@@ -208,10 +208,17 @@ Configuration for OCUDU 5G gNodeB deployment:
 ## Configuration Notes
 
 ### SR-IOV Resource Naming
-The SR-IOV resource name must match across configurations:
+Extended resources must match what the kubelet advertises (check `oc describe node <node> | grep -E 'Allocatable|openshift.io/sriov'`).
+
+On **OpenShift 4.21+**, the device plugin typically exposes `openshift.io/<resourceName>` where `<resourceName>` is `spec.resourceName` from `SriovNetworkNodePolicy`. Older releases often used `openshift.io/pci_sriov_net_<resourceName>` instead—verify on your cluster.
+
+Examples (manifests / `values/ocudu-gnb`):
 - SriovNetworkNodePolicy: `resourceName: pci_sriov_net_ens1f0`
 - OCUDU values: `extendedResourceName: openshift.io/pci_sriov_net_ens1f0`
 - Pod resources: `openshift.io/pci_sriov_net_ens1f0: 1`
+
+Examples (`kds/bos2` with `resourceName: sriov_gnb_ens1f0`):
+- Pod resources / `extendedResourceName`: `openshift.io/sriov_gnb_ens1f0`
 
 ### Network Slice Configuration
 Both gNB and core must have matching slice configuration:

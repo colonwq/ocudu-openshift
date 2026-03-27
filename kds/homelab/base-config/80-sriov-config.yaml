@@ -1,4 +1,4 @@
-# If `oc describe node <n> | grep pci_sriov` is empty: run 82-sriov-diagnose.sh <n>.
+# If allocatable has no openshift.io/sriov_* resource: run bos2/base-config/82-sriov-diagnose.sh <n>.
 ---
 apiVersion: sriovnetwork.openshift.io/v1
 kind: SriovNetworkNodePolicy
@@ -6,7 +6,7 @@ metadata:
   name: sriov-policy-node-2
   namespace: openshift-sriov-network-operator 
 spec:
-  # Resource name for pod scheduling
+  # Resource name for pod scheduling (OCP 4.21+: kubelet advertises openshift.io/<resourceName>)
   resourceName: sriov_gnb_enp2s0
   # Match SNO / control-plane node. For multi-node, narrow to the target worker/hostname.
   nodeSelector:

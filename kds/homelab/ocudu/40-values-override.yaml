@@ -26,10 +26,10 @@ imagePullSecrets: []
 
 # Multus SR-IOV: the pod MUST request the same extended resource as your SriovNetworkNodePolicy
 # for this NAD, or SR-IOV CNI fails with "VF pci addr is required".
-# Verify on a worker: oc describe node <node> | grep -i pci_sriov
-# Example for resourceName sriov_gnb_enp2s0 (see kds/base-config/80-sriov-config.yaml):
-#   openshift.io/pci_sriov_net_sriov_gnb_enp2s0
-# If your policy uses resourceName ens1f0 instead, use openshift.io/pci_sriov_net_ens1f0 (adjust to match allocatable).
+# Verify: oc describe node <node> | grep -E 'Allocatable|openshift.io/sriov'
+# Example for resourceName sriov_gnb_enp2s0 (see kds/homelab/base-config/80-sriov-config.yaml):
+#   openshift.io/sriov_gnb_enp2s0 (OCP 4.21+; older clusters used openshift.io/pci_sriov_net_<resourceName>)
+# If your policy uses resourceName pci_sriov_net_ens1f0, use openshift.io/pci_sriov_net_ens1f0 (match oc describe node).
 podAnnotations:
   k8s.v1.cni.cncf.io/networks: ocudu/sriov-ocudu
 
@@ -38,12 +38,12 @@ resources:
     cpu: 12
     memory: 16Gi
     hugepages-1Gi: 2Gi
-    openshift.io/pci_sriov_net_sriov_gnb_enp2s0: "1"
+    openshift.io/sriov_gnb_enp2s0: "1"
   requests:
     cpu: 12
     memory: 16Gi
     hugepages-1Gi: 2Gi
-    openshift.io/pci_sriov_net_sriov_gnb_enp2s0: "1"
+    openshift.io/sriov_gnb_enp2s0: "1"
 
 # Performance and Scheduling Overrides
 runtimeClassName: performance-gnb-performance-profile # Must match the metadata.name of your PerformanceProfile

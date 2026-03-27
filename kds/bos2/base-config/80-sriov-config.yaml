@@ -1,4 +1,4 @@
-# If `oc describe node <n> | grep pci_sriov` is empty: run 82-sriov-diagnose.sh <n>.
+# If allocatable has no openshift.io/sriov_* resource: run 82-sriov-diagnose.sh <n>.
 # Prefer rootDevices (PCI) over pfNames when interface names shift; use 0000:12:00.0 for second NIC (ens2f0).
 # If sync succeeds but allocatable stays empty, check vfio + device-plugin logs (see script).
 ---
@@ -8,7 +8,7 @@ metadata:
   name: sriov-policy-node-2
   namespace: openshift-sriov-network-operator 
 spec:
-  # Resource name for pod scheduling (must match openshift.io/pci_sriov_net_<resourceName> on nodes)
+  # Resource name for pod scheduling (OCP 4.21+: kubelet advertises openshift.io/<resourceName>; verify with oc describe node)
   resourceName: sriov_gnb_ens1f0
   # Match SNO / control-plane node (same idea as gnb-performance-profile). For multi-node,
   # replace with the worker label or hostname of the node that owns the SR-IOV PF.

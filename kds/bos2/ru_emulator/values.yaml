@@ -131,7 +131,7 @@ sriovConfig:
   #   - mellanox.com/cx5_sriov_switchdev (Mellanox NICs)
   # Check available resources: kubectl get node <node-name> -o json | jq '.status.allocatable'
   # Must match SriovNetworkNodePolicy resourceName (see kds/bos2/base-config/80-sriov-config.yaml)
-  extendedResourceName: "openshift.io/pci_sriov_net_sriov_gnb_ens1f0"
+  extendedResourceName: "openshift.io/sriov_gnb_ens1f0"
   
   # -- Number of SR-IOV VFs to request per pod
   # For single-cell emulator, typically 1
