@@ -44,6 +44,11 @@ resources:
     hugepages-1Gi: 2Gi
     openshift.io/sriov_gnb_ens1f0: "1"
 
+# Must match SriovNetworkNodePolicy + node allocatable; entrypoint maps this to PCIDEVICE_* (not intel.com/*).
+sriovConfig:
+  enabled: true
+  extendedResourceName: "openshift.io/sriov_gnb_ens1f0"
+
 # Performance and Scheduling Overrides
 runtimeClassName: performance-gnb-performance-profile # Must match the metadata.name of your PerformanceProfile
 

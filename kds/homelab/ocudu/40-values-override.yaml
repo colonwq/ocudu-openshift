@@ -45,6 +45,10 @@ resources:
     hugepages-1Gi: 2Gi
     openshift.io/sriov_gnb_enp2s0: "1"
 
+sriovConfig:
+  enabled: true
+  extendedResourceName: "openshift.io/sriov_gnb_enp2s0"
+
 # Performance and Scheduling Overrides
 runtimeClassName: performance-gnb-performance-profile # Must match the metadata.name of your PerformanceProfile
 
