@@ -1,5 +1,5 @@
 #!/bin/bash
-# Gather SR-IOV operator state when `oc describe node ... | grep pci_sriov` is empty.
+# Gather SR-IOV operator state when node allocatable has no openshift.io/sriov_* extended resource.
 # Usage: ./82-sriov-diagnose.sh [node-name]
 
 NS="openshift-sriov-network-operator"
@@ -39,13 +39,13 @@ echo "=== Pods ==="
 oc get pods -n "$NS" -o wide 2>/dev/null || true
 echo ""
 
-echo "=== Node pci_sriov ==="
+echo "=== Node SR-IOV extended resources (allocatable) ==="
 if [[ -n "$NODE" ]]; then
-  oc describe node "$NODE" 2>/dev/null | grep -E 'Allocatable:|pci_sriov|Capacity:' || true
+  oc describe node "$NODE" 2>/dev/null | grep -E 'Allocatable:|Capacity:|openshift.io/sriov|pci_sriov' || true
 else
   for n in $(oc get nodes -o jsonpath='{.items[*].metadata.name}'); do
     echo "--- $n ---"
-    oc describe node "$n" 2>/dev/null | grep -E 'pci_sriov' || echo "(no pci_sriov lines)"
+    oc describe node "$n" 2>/dev/null | grep -E 'openshift.io/sriov|pci_sriov' || echo "(no openshift.io/sriov_* / pci_sriov lines)"
   done
 fi
 echo ""
@@ -54,7 +54,7 @@ echo "=== Operator logs (last 40 lines) ==="
 oc logs -n "$NS" deploy/sriov-network-operator --tail=40 2>/dev/null || true
 echo ""
 
-echo "=== sriov-device-plugin logs ==="
+echo "=== sriov-device-plugin (allocates openshift.io/<resourceName>, e.g. openshift.io/sriov_gnb_enp2s0 on OCP 4.21+) ==="
 if oc get ds sriov-device-plugin -n "$NS" &>/dev/null; then
   oc logs -n "$NS" daemonset/sriov-device-plugin --tail=80 2>/dev/null || true
 fi
