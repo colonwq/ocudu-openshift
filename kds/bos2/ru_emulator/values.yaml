@@ -181,9 +181,6 @@ config:
     cells:
     # -- Cell bandwidth in MHz
     - bandwidth: 100
-      # Ignored by ru-emulator Helm 2.0.0-dev (not rendered into ru_emulator.yaml). MTU is set on
-      # VFs via SriovNetworkNodePolicy spec.mtu in kds/bos2/base-config/80-sriov-config.yaml.
-      mtu: 1500
       # Same interface name as ocudu-gnb ru_ofh.cells[].network_interface (DPDK/VF netdev in pod)
       network_interface: "ens1f0"
       # Must match ocudu-gnb gnb-config ru_ofh.cells (RU MAC / DU MAC)

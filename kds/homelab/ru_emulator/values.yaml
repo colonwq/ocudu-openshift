@@ -168,8 +168,6 @@ config:
     # Each cell represents one OpenFronthaul connection to a DU
     cells:
     - bandwidth: 100
-      # Same as bos2: chart may not render mtu; use SriovNetworkNodePolicy spec.mtu (80-sriov-config).
-      mtu: 1500
       network_interface: "enp2s0"
       ru_mac_addr: "52:54:00:1d:f3:8d"
       du_mac_addr: "84:47:09:3e:a0:3d"
