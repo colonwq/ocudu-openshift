@@ -15,7 +15,10 @@ spec:
   nodeSelector:
     node-role.kubernetes.io/master: ""
   priority: 10
-  mtu: 9000
+  # 1500: ru-emulator Helm chart does not pass config.cells[].mtu into ru_emulator.yaml; the
+  # OCUDU binary defaults to 9000 and fails on vfio (MTU -1). Policy MTU sets VF MTU for gNB+RU.
+  # For lab jumbo (9000), fix the chart or use a post-render patch; then raise policy MTU to match.
+  mtu: 1500
   numVfs: 16
   nicSelector:
     # First Intel E810 PF on this HPE host (see SriovNetworkNodeState / lspci). gNB app still uses net name ens1f0 in values.

@@ -12,7 +12,8 @@ spec:
   nodeSelector:
     node-role.kubernetes.io/master: ""
   priority: 10
-  mtu: 9000
+  # See bos2/base-config/80-sriov-config.yaml (ru-emulator vfio + Helm mtu not applied).
+  mtu: 1500
   numVfs: 16
   nicSelector: 
     # Directly targeting the enp2s0 physical interface
