@@ -30,7 +30,6 @@ metadata:
 spec:
   resourceName: sriov_gnb_enp2s0
   networkNamespace: ocudu
-  vlan: 50
   spoofChk: "on"
   trust: "on"
   # Empty IPAM: see bos2/base-config/80-sriov-config.yaml (static without addresses breaks CNI).

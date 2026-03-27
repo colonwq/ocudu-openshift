@@ -46,10 +46,9 @@ configmap: {}
 # configmap:
 #   nameOverride: "ru-emu-srskit-rack1-config"
 
-# -- Additional pod annotations
-# @default -- `{}` (no additional annotations)
-#podAnnotations: {"k8s.v1.cni.cncf.io/networks": '[{"name": "sriov-ocudu", "mac": "fe:ed:be:ef:42:42"}]'}
-podAnnotations: {}
+# Multus SR-IOV: same NAD as ocudu-gnb (homelab policy: enp2s0).
+podAnnotations:
+  k8s.v1.cni.cncf.io/networks: ocudu/sriov-ocudu
 
 # -- Pod-level security context
 # @default -- `{}` (no pod security context)
@@ -92,8 +91,17 @@ securityContext:
 #     memory: 8Gi
 #     hugepages-1Gi: 2Gi
 # ```
-# @default -- `{}` (no resource constraints)
-resources: {}
+resources:
+  limits:
+    cpu: 4
+    memory: 8Gi
+    hugepages-1Gi: 2Gi
+    openshift.io/sriov_gnb_enp2s0: "1"
+  requests:
+    cpu: 4
+    memory: 8Gi
+    hugepages-1Gi: 2Gi
+    openshift.io/sriov_gnb_enp2s0: "1"
 
 # -- Node selector for pod assignment
 # Schedule pods only on nodes with matching labels
@@ -111,26 +119,12 @@ affinity: {}
 
 # -- Network configuration
 network:
-  # -- Enable host network mode for direct host network access
-  # Disable this when using SR-IOV plugin
   hostNetwork: false
 
 # -- SR-IOV configuration
-# Provides high-performance network interfaces via SR-IOV Virtual Functions (VFs)
-# When enabled, the entrypoint script automatically detects VF PCI address and MAC
 sriovConfig:
-  # -- Enable SR-IOV network device plugin
-  # Requires SR-IOV device plugin deployed in cluster
-  # When enabled, set network.hostNetwork: false
-  enabled: false
-  
-  # -- Extended resource name from SR-IOV device plugin
-  # This must match the resource name configured in your SR-IOV device plugin
-  # Common values:
-  #   - intel.com/intel_sriov_netdevice (Intel NICs)
-  #   - mellanox.com/cx5_sriov_switchdev (Mellanox NICs)
-  # Check available resources: kubectl get node <node-name> -o json | jq '.status.allocatable'
-  extendedResourceName: "openshift.io/pci_sriov_net_enp1s0"
+  enabled: true
+  extendedResourceName: "openshift.io/sriov_gnb_enp2s0"
   
   # -- Number of SR-IOV VFs to request per pod
   # For single-cell emulator, typically 1
@@ -173,19 +167,11 @@ config:
     # -- List of emulated RU cells
     # Each cell represents one OpenFronthaul connection to a DU
     cells:
-    # -- Cell bandwidth in MHz
     - bandwidth: 100
-      # -- Network interface name for OpenFronthaul traffic
-      #network_interface: "enp1s0"
-      network_interface: "br-ex"
-      # -- MAC address of the RU (emulated device)
-      #ru_mac_addr: "b4:96:91:d8:8f:22"
+      network_interface: "enp2s0"
       ru_mac_addr: "52:54:00:1d:f3:8d"
-      # -- MAC address of the DU (destination)
-      #du_mac_addr: "de:ad:be:ef:ca:fe"
-      du_mac_addr: "0a:58:0a:80:00:84"
-      # -- VLAN tag for traffic isolation
-      vlan_tag: 50
+      du_mac_addr: "84:47:09:3e:a0:3d"
+      vlan_tag: 0
       # -- Uplink port IDs for OpenFronthaul
       ul_port_id: [0]
       # -- Compression method for uplink IQ data
