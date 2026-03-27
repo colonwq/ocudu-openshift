@@ -128,6 +128,9 @@ config:
         nof_ul_slots: 2
         nof_ul_symbols: 4
 
+    hal:
+      eal_args: --lcores=(0-1)@(0-1)
+
     log:
       filename: /tmp/gnb.log
       all_level: warning

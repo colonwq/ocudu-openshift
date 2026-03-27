@@ -128,6 +128,10 @@ config:
         nof_ul_slots: 2
         nof_ul_symbols: 4
 
+    # DPDK HAL (required with SR-IOV/vfio; entrypoint merges VF PCI into eal_args). Tune lcores vs PerformanceProfile.
+    hal:
+      eal_args: --lcores=(0-1)@(0-1)
+
     log:
       filename: /tmp/gnb.log
       all_level: warning
