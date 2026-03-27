@@ -181,6 +181,9 @@ config:
     cells:
     # -- Cell bandwidth in MHz
     - bandwidth: 100
+      # vfio VFs often report MTU -1 until DPDK init; default 9000 in app then fails. Use 1500 unless
+      # you confirm jumbo end-to-end (policy + switch + DU). Match ocudu-gnb if you add mtu there.
+      mtu: 1500
       # Same interface name as ocudu-gnb ru_ofh.cells[].network_interface (DPDK/VF netdev in pod)
       network_interface: "ens1f0"
       # Must match ocudu-gnb gnb-config ru_ofh.cells (RU MAC / DU MAC)
