@@ -7,10 +7,10 @@ spec:
   storage:
     deviceClasses:
       - name: vg1
-        # Adding a selector ensures we don't accidentally grab the OS disk
+        # Match kds/bos2/base-config/90-lvmcluster.yaml: whole-disk paths fail if partition table exists.
         deviceSelector:
           paths:
-            - /dev/nvme1n1
+            - /dev/nvme1n1p1
         thinPoolConfig:
           name: thin-pool-1
           overprovisionRatio: 10

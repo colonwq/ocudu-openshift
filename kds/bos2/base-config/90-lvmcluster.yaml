@@ -7,10 +7,12 @@ spec:
   storage:
     deviceClasses:
       - name: vg1
-        # Dedicated 1.7T NVMe (see lsblk: nvme1n1 unpartitioned); OS/root is on nvme0n1
+        # Dedicated block device for TopoLVM (confirm with lsblk -f on the node).
+        # nvme0n1 is often the OS disk — only use if this VG is intended for that device and
+        # layout (whole disk unpartitioned, or use e.g. /dev/nvme0n1pN if partitioned).
         deviceSelector:
           paths:
-            - /dev/nvme1n1
+            - /dev/nvme0n1
         thinPoolConfig:
           name: thin-pool-1
           overprovisionRatio: 10
