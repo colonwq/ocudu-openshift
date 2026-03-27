@@ -37,9 +37,9 @@ spec:
   vlan: 50
   spoofChk: "on"
   trust: "on"
-  ipam: |
-    {
-      "type": "static"
-    }
+  # Empty IPAM: kernel does not assign an address on the VF (typical for DPDK/vfio). A "static" stanza
+  # without addresses causes Multus: IPAM plugin returned missing IP config.
+  ipam: |-
+    {}
   linkState: "auto"
-  capabilities: '{"mac": true, "ips": true}'
+  capabilities: '{"mac": true}'

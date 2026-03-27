@@ -33,9 +33,8 @@ spec:
   vlan: 50
   spoofChk: "on"
   trust: "on"
-  ipam: |
-    {
-      "type": "static"
-    }
+  # Empty IPAM: see bos2/base-config/80-sriov-config.yaml (static without addresses breaks CNI).
+  ipam: |-
+    {}
   linkState: "auto"
-  capabilities: '{"mac": true, "ips": true}'
+  capabilities: '{"mac": true}'
