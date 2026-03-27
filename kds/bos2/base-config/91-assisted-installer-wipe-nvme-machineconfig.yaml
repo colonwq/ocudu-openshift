@@ -1,0 +1,54 @@
+# Custom manifest for OpenShift Assisted Installer (Web UI → Custom manifests) or agent-based install.
+#
+# Clears LVM (if any), partition signatures, and GPT on /dev/nvme0n1 and /dev/nvme1n1 on the node's
+# FIRST boot after this MachineConfig is applied — runs before kubelet.
+#
+# SAFETY: The block device that holds / (your OS disk) is NEVER wiped. On a typical SNO install with
+# root on nvme1n1p4, only nvme0n1 (e.g. old TopoLVM vg1) is cleared; nvme1n1 is skipped.
+#
+# You cannot use a post-install MachineConfig to wipe the same disk the cluster was just installed
+# onto — that disk is already root. To reinstall with a clean nvme1n1, wipe it from discovery/live
+# media before install, or use the installer's formatting for the installation disk.
+#
+# After editing, add this YAML under Assisted Installer → Custom manifests (enable the feature).
+# For an existing cluster: oc apply -f 91-assisted-installer-wipe-nvme-machineconfig.yaml
+# Expect an MCO reboot cycle on the node.
+---
+apiVersion: machineconfiguration.openshift.io/v1
+kind: MachineConfig
+metadata:
+  labels:
+    machineconfiguration.openshift.io/role: master
+  name: 91-master-assisted-wipe-nvme
+spec:
+  config:
+    ignition:
+      version: 3.2.0
+    storage:
+      files:
+        - path: /usr/local/sbin/assisted-nvme-wipe.sh
+          mode: 0755
+          overwrite: true
+          contents:
+            compression: gzip
+            source: data:;base64,H4sIAAAAAAAAA5VVTW+bQBC98yumW+SYqoQ4xzhEqpocqqh1lKSHKoqsNSxmBd5Fy4Kr2P7vnQUWf6VpemT2zdebN8PHD8GMi2BGy9QpmQafVRIKXrCE8ty5nvy4CYOaqiDns+BUFkyUKU+0T8uSl5rFvqgXzF8i/jSWgjlPT+AnQFzjSOD5GQYDYL+5hjMnl/OhBytgUSqBPB1HeAb3ExnDxnGWNM+mWk5jXmbGxwHIZURzEKE7wg+ThWEW0aRYr0ExXSkB5m2Z8pyBVhUbQyzRYH11AUXWfOsidId5Ocsz8EUs4fHX3U0b7fwqiFkdiCrPPRN3phhtfTAlcXVBIAyBmLpsd7YhdB/bOs5MF8aryPYz3d3++PL9OBesIWU0Bn90nNUXCC8y2+n2TYSkCWAe0dDQD1smkMb7yeRxev3t4TYkxOEJlCrCchIu4oXASQsl4WHy8/7rDQR7nY9Bp0xgsNYBM8Y5F1k7WbQd1L62DJgnD922ed3h7iitN3qY+XhOwo0qgCgpNTSIoWA1U2DkEHsX4K76WBd+JTIhl2JDUCD4fqwOLGmrjxlmQ4PlbQVNpjLjBSw4ak/MoXk/HFobSsWGy/ioe+NhWkQ27Wz6ComRA3FV3Irk0HWL80xRPcmwU5mJD8PJA/SMeKSB2BrxA0nrXJCFvo22pqIubduD7Yh2UiVSQT0HLsAdGrDvC2mkh3HwQ+LbVNAFs0H2NVpKhbKpvH6xAPEhcVf1PAgg2JDOaJh5wRD13C5JJIXmomIdIK+jlIo5A5+KDnegKKOPPsV/gRVbyBrBSfIPcLcwuKT1ns9x471TQ317YFSzrwoKqnTPh23cGF9t3eg2QaJp0qP+Vt5BVW+BTSdwCZf9pTGF4TDNrfncHbdXxkmXGZy452FImuCrQnE8C+1RIe5oc2KEvlfxG9Sg+CK5WFCBrNRQzptt3kGeXw1GOzrsAL7/Qguf4vs7eH9nJc1q4JHjZcribjk2OycDWif865yJ0WvmEZodLasotT+y9kphf0XONCPOH7hQ7pE1BwAA
+    systemd:
+      units:
+        - name: assisted-nvme-wipe.service
+          enabled: true
+          contents: |
+            [Unit]
+            Description=Assisted install: wipe non-root NVMe disks (nvme0n1/nvme1n1) once before kubelet
+            Documentation=https://docs.openshift.com/container-platform/latest/installing/index.html
+            DefaultDependencies=no
+            Before=kubelet.service
+            After=systemd-udevd.service
+            ConditionPathExists=!/var/lib/.openshift-assisted-nvme-wipe.done
+
+            [Service]
+            Type=oneshot
+            RemainAfterExit=yes
+            ExecStart=/usr/local/sbin/assisted-nvme-wipe.sh
+
+            [Install]
+            WantedBy=multi-user.target
