@@ -46,9 +46,8 @@ configmap: {}
 # configmap:
 #   nameOverride: "ru-emu-srskit-rack1-config"
 
-# Multus SR-IOV: same NAD as ocudu-gnb; second VF on ens1f0 PF (policy numVfs must allow both pods).
-podAnnotations:
-  k8s.v1.cni.cncf.io/networks: ocudu/sriov-ocudu
+# hostNetwork: no Multus / secondary NAD
+podAnnotations: {}
 
 # -- Pod-level security context
 # @default -- `{}` (no pod security context)
@@ -96,12 +95,10 @@ resources:
     cpu: 4
     memory: 8Gi
     hugepages-1Gi: 2Gi
-    openshift.io/sriov_gnb_ens1f0: "1"
   requests:
     cpu: 4
     memory: 8Gi
     hugepages-1Gi: 2Gi
-    openshift.io/sriov_gnb_ens1f0: "1"
 
 # -- Node selector for pod assignment
 # Schedule pods only on nodes with matching labels
@@ -119,15 +116,13 @@ affinity: {}
 
 # -- Network configuration
 network:
-  # SR-IOV + Multus (must be false when sriovConfig.enabled is true)
-  hostNetwork: false
+  hostNetwork: true
 
 # -- SR-IOV configuration
 # Provides high-performance network interfaces via SR-IOV Virtual Functions (VFs)
 # When enabled, the entrypoint script automatically detects VF PCI address and MAC
 sriovConfig:
-  # Must match kds/bos2/base-config/80-sriov-config.yaml and ocudu-gnb sriovConfig
-  enabled: true
+  enabled: false
   
   # -- Extended resource name from SR-IOV device plugin
   # This must match the resource name configured in your SR-IOV device plugin
@@ -181,11 +176,11 @@ config:
     cells:
     # -- Cell bandwidth in MHz
     - bandwidth: 100
-      # Same interface name as ocudu-gnb ru_ofh.cells[].network_interface (DPDK/VF netdev in pod)
+      # Host NIC for OFH when hostNetwork is true (align with ocudu-gnb if gNB uses same L2 path)
       network_interface: "ens1f0"
       # Must match ocudu-gnb gnb-config ru_ofh.cells (RU MAC / DU MAC)
-      ru_mac_addr: "52:54:00:1d:f3:8d"
-      du_mac_addr: "84:47:09:3e:a0:3d"
+      ru_mac_addr: "b4:96:91:c4:d2:64"
+      du_mac_addr: "de:ad:be:ef:ca:fe"
       # 0 = untagged (no VLAN); cluster SriovNetwork has no vlan: on the VF
       vlan_tag: 0
       # -- Uplink port IDs for OpenFronthaul

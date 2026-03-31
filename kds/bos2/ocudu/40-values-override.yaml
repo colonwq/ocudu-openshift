@@ -29,8 +29,7 @@ imagePullSecrets: []
 # Verify: oc describe node <node> | grep -E 'Allocatable|openshift.io/sriov'
 # Example for resourceName sriov_gnb_ens1f0 (see kds/bos2/base-config/80-sriov-config.yaml):
 #   openshift.io/sriov_gnb_ens1f0 (OCP 4.21+; older clusters used openshift.io/pci_sriov_net_<resourceName>)
-podAnnotations:
-  k8s.v1.cni.cncf.io/networks: ocudu/sriov-ocudu
+podAnnotations: {"k8s.v1.cni.cncf.io/networks": '[{"name": "sriov-ocudu", "mac": "de:ad:be:ef:ca:fe"}]'}
 
 resources:
   limits:
@@ -97,9 +96,9 @@ config:
         #- network_interface: enp1s0f0
         #- network_interface: enp1s0
         - network_interface: ens1f0
-          ru_mac_addr: "52:54:00:1d:f3:8d"
+          ru_mac_addr: "b4:96:91:c4:d2:64"
           #du_mac_addr: "0a:58:0a:80:00:84"
-          du_mac_addr: "84:47:09:3e:a0:3d"
+          du_mac_addr: "de:ad:be:ef:ca:fe"
           #vlan_tag_cp: 5
           #vlan_tag_up: 5
           prach_port_id: [4, 5]
