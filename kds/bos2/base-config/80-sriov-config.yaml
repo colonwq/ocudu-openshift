@@ -25,6 +25,7 @@ spec:
   deviceType: vfio-pci
   isRdma: false 
   needVhostNet: false 
+# trust / spoofChk are set on SriovNetwork (below), not on SriovNetworkNodePolicy.
 ---
 apiVersion: sriovnetwork.openshift.io/v1
 kind: SriovNetwork
@@ -35,7 +36,7 @@ spec:
   resourceName: sriov_gnb_ens1f0
   networkNamespace: ocudu
   # No VLAN: untagged L2 on PF/VF (match lab; use VLAN only if switching requires it)
-  spoofChk: "on"
+  spoofChk: "off"
   trust: "on"
   # Empty IPAM: kernel does not assign an address on the VF (typical for DPDK/vfio). A "static" stanza
   # without addresses causes Multus: IPAM plugin returned missing IP config.
