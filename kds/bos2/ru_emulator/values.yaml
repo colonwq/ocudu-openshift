@@ -123,7 +123,8 @@ network:
 # When enabled, the entrypoint script automatically detects VF PCI address and MAC
 sriovConfig:
   enabled: false
-  
+
+#bob  
   # -- Extended resource name from SR-IOV device plugin
   # This must match the resource name configured in your SR-IOV device plugin
   # Common values:
