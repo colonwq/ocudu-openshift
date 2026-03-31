@@ -1,6 +1,7 @@
 # Helm chart archives pulled locally by deploy scripts (rate limits / offline reuse)
 kds/bos2/open5gs/*.tgz
 kds/bos2/ocudu/*.tgz
+kds/bos2/ru_emulator/*.tgz
 
 # Local cluster credentials
 kubeconfig

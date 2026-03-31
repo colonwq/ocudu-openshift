@@ -15,7 +15,8 @@
 #   80-sriov-config.yaml
 #   90-lvmcluster.yaml
 #
-# Helper scripts: 01-mcp-wait.sh, 81-wait-after-sriov-apply.sh, 95-wait-for-lvmcluster.sh
+# Helper scripts: 01-mcp-wait.sh, 92-merge-pull-secret-wait-mcp.sh, 81-wait-after-sriov-apply.sh,
+#   95-wait-for-lvmcluster.sh
 # Diagnostics (not applied): 82-sriov-diagnose.sh
 # Assisted install only (not applied here): agent-config.yaml, assisted-install.txt
 
@@ -68,6 +69,7 @@ require_files() {
         80-sriov-config.yaml \
         90-lvmcluster.yaml \
         01-mcp-wait.sh \
+        92-merge-pull-secret-wait-mcp.sh \
         81-wait-after-sriov-apply.sh \
         95-wait-for-lvmcluster.sh
     do
@@ -95,6 +97,10 @@ until oc get packagemanifests -n openshift-marketplace kubernetes-nmstate-operat
     sleep 10
 done
 echo "✅ CatalogSource is responsive. Proceeding with Subscription."
+
+# --- Merge pull-secret with Podman (docker.io); waits for master MCP ---
+echo "Merging cluster pull-secret with Podman auth (see 92-merge-pull-secret-wait-mcp.sh)"
+bash "$SCRIPT_DIR/92-merge-pull-secret-wait-mcp.sh"
 
 # --- NMState operator ---
 echo "Installing NMState operator"
