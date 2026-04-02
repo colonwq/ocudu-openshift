@@ -3,11 +3,11 @@
 # Platform-to-image-tag mapping (from 00-install-ocudu.sh -p argument)
 get_image_tag() {
   case "$1" in
-    f) echo "20260306f01" ;;
-    c) echo "20260306c03" ;;
+    f) echo "20260401f01" ;;
+    c) echo "20260401fc01" ;;
     u) echo "20260306u01" ;;
-    r) echo "20260309r01" ;;
-    *) echo "20260306f01" ;;  # default
+    r) echo "20260401r01" ;;
+    *) echo "20260401f01" ;;  # default
   esac
 }
 

@@ -1,7 +1,7 @@
 image:
   repository: quay.io/kschinck/gnb
-  #tag: "20260306f01"
-  tag: "20260318r02"
+  #tag: "20260401f01"
+  tag: "20260401f01"
 
 securityContext:
   allowPrivilegeEscalation: true
