@@ -1,0 +1,20 @@
+# Discovered by OpenShift cluster monitoring when namespace ocudu has
+# openshift.io/cluster-monitoring=true (applied by 00-install-telegraf.sh).
+# Metrics path matches Telegraf prometheus_client + health listener on 9273.
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: ocudu-telegraf
+  namespace: ocudu
+  labels:
+    app.kubernetes.io/name: ocudu-telegraf
+    openshift.io/cluster-monitoring: "true"
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: ocudu-telegraf
+  endpoints:
+    - port: metrics
+      interval: 30s
+      path: /metrics
+      scheme: http

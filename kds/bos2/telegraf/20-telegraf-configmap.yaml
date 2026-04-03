@@ -1,0 +1,141 @@
+# Telegraf config: same inputs as colonwq/ocudu docker/telegraf/telegraf.conf (WebSocket JSON via ws_adapter).
+# Outputs: prometheus_client + health only (no InfluxDB required on-cluster).
+# Source reference: https://github.com/colonwq/ocudu/tree/dev/docker/telegraf
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ocudu-telegraf
+  namespace: ocudu
+  labels:
+    app.kubernetes.io/name: ocudu-telegraf
+    app.kubernetes.io/component: metrics
+data:
+  telegraf.conf: |
+    [agent]
+     interval = "${TELEGRAF_INPUT_INTERVAL:-5s}"
+     flush_interval = "${TELEGRAF_OUTPUT_INTERVAL:-5s}"
+     metric_buffer_limit = ${TELEGRAF_BUFFER_LIMIT:-10000}
+     hostname = "${INFLUXDB3_TESTBED}"
+     skip_processors_after_aggregators = false
+     quiet = ${TELEGRAF_QUIET:-true}
+     debug = ${TELEGRAF_DEBUG:-false}
+     logfile = "${TELEGRAF_LOG_FILE:-}"
+
+    [[inputs.execd]]
+     command = ["/usr/local/bin/ws_adapter.py"]
+     data_format = "xpath_json"
+     buffer_size = "${TELEGRAF_INPUT_BUFFER_SIZE:-1MiB}"
+     xpath_native_types = true
+     xpath_allow_empty_selection = true
+
+     [[inputs.execd.xpath]]
+     metric_name = "'ue'"
+     metric_selection = "/cells/*/ue_list/*"
+     timestamp = "/timestamp"
+     timestamp_format = "2006-01-02T15:04:05.000"
+     field_selection = "child::*[not(name()='pci') and not(name()='rnti')]"
+     [inputs.execd.xpath.tags]
+     pci = "number(pci)"
+     rnti = "number(rnti)"
+
+     [[inputs.execd.xpath]]
+     metric_name = "'cell'"
+     metric_selection = "/cells/*/cell_metrics"
+     timestamp = "/timestamp"
+     timestamp_format = "2006-01-02T15:04:05.000"
+     field_selection = "descendant::*[not(*)]"
+
+     [[inputs.execd.xpath]]
+     metric_name = "'event_list'"
+     metric_selection = "/cells/*/event_list/*"
+     timestamp = "/timestamp"
+     timestamp_format = "2006-01-02T15:04:05.000"
+     field_selection = "descendant::*[not(*)]"
+
+     [[inputs.execd.xpath]]
+     metric_name = "'ofh'"
+     metric_selection = "/ru/ofh/cells/*"
+     timestamp = "/timestamp"
+     timestamp_format = "2006-01-02T15:04:05.000"
+     field_selection = "descendant::*[not(*) and not(name()='pci')]"
+     field_name_expansion = true
+     [inputs.execd.xpath.tags]
+     pci = "number(pci)"
+
+     [[inputs.execd.xpath]]
+     metric_name = "'timing_stats'"
+     metric_selection = "/ru/ofh/timing_stats/*"
+     timestamp = "/timestamp"
+     timestamp_format = "2006-01-02T15:04:05.000"
+     field_selection = "descendant::*[not(*)]"
+     field_name_expansion = true
+
+     [[inputs.execd.xpath]]
+     metric_name = "'cu_cp'"
+     metric_selection = "/cu-cp"
+     timestamp = "/timestamp"
+     timestamp_format = "2006-01-02T15:04:05.000"
+     field_selection = "descendant::*[not(*) and not(name()='ngaps') and not(name()='rrcs')]"
+
+     [[inputs.execd.xpath]]
+     metric_name = "'ngaps'"
+     metric_selection = "/cu-cp/ngaps/*/*"
+     timestamp = "/timestamp"
+     timestamp_format = "2006-01-02T15:04:05.000"
+     field_selection = "descendant::*[not(*) and not(name()='amf_name') and not(name()='pdu_session_management_s-nssai')]"
+     field_name_expansion = true
+     [inputs.execd.xpath.tags]
+     amf_name = "amf_name"
+     snssai = "pdu_session_management/s-nssai"
+
+     [[inputs.execd.xpath]]
+     metric_name = "'rrcs'"
+     metric_selection = "/cu-cp/rrcs/*/*"
+     timestamp = "/timestamp"
+     timestamp_format = "2006-01-02T15:04:05.000"
+     field_selection = "descendant::*[not(*) and not(name()='gnb_du_id')]"
+     field_name_expansion = true
+     [inputs.execd.xpath.tags]
+     gnb_du_id = "number(gnb_du_id)"
+
+     [[inputs.execd.xpath]]
+     metric_name = "name(.)"
+     metric_selection = "/*[not(name()='timestamp') and not(name()='cells') and not(name()='ru') and not(name()='cu-cp') and not(name()='ngaps') and not(name()='rrcs') and not(name()='internal_') ]"
+     timestamp = "/timestamp"
+     timestamp_format = "2006-01-02T15:04:05.000"
+     field_selection = "descendant::*[not(*)]"
+     field_name_expansion = true
+
+    [[inputs.internal]]
+     interval = "${TELEGRAF_INPUT_INTERVAL:-5s}"
+
+    [[outputs.prometheus_client]]
+     listen = ":9273"
+     path = "/metrics"
+     expiration_interval = "120s"
+     namedrop = ["internal_*"]
+
+    [[outputs.health]]
+     service_address = "http://:9273"
+     namepass = ["internal_write"]
+     tagpass = { output = ["prometheus_client"] }
+
+     [[outputs.health.compares]]
+     field = "metrics_written"
+     gt = 0.0
+
+     [[outputs.health.compares]]
+     field = "metrics_dropped"
+     eq = 0.0
+
+     [[outputs.health.compares]]
+     field = "errors"
+     eq = 0.0
+
+     [[outputs.health.compares]]
+     field = "startup_errors"
+     eq = 0.0
+
+     [[outputs.health.compares]]
+     field = "metrics_rejected"
+     eq = 0.0

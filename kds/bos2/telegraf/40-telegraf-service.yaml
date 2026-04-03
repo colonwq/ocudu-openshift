@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: ocudu-telegraf
+  namespace: ocudu
+  labels:
+    app.kubernetes.io/name: ocudu-telegraf
+    app.kubernetes.io/component: metrics
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: ocudu-telegraf
+  ports:
+    - name: metrics
+      port: 9273
+      targetPort: 9273
+      protocol: TCP

@@ -1,0 +1,76 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ocudu-telegraf
+  namespace: ocudu
+  labels:
+    app.kubernetes.io/name: ocudu-telegraf
+    app.kubernetes.io/component: metrics
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: ocudu-telegraf
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: ocudu-telegraf
+        app.kubernetes.io/component: metrics
+    spec:
+      # Telegraf image runs as non-root; default restricted-v2 is sufficient on OCP 4.12+.
+      containers:
+        - name: telegraf
+          image: quay.io/kschinck/telegraf:20260402d01
+          imagePullPolicy: IfNotPresent
+          env:
+            # ws_adapter.py builds ws://$WS_URL — DNS of Service in 10-ocudu-gnb-remote-control-svc.yaml
+            - name: WS_URL
+              value: ocudu-gnb-remote-control.ocudu.svc.cluster.local:8001
+            - name: INFLUXDB3_TESTBED
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: TELEGRAF_INPUT_INTERVAL
+              value: "5s"
+            - name: TELEGRAF_OUTPUT_INTERVAL
+              value: "5s"
+            - name: TELEGRAF_QUIET
+              value: "true"
+            # Optional: non-empty value loads image-bundled /etc/ocudu/telegraf-ocp-remote-write.conf
+            # Example (adjust for your receiver; often needs TLS + token via custom Secret/config):
+            # - name: PROMETHEUS_REMOTE_WRITE_URL
+            #   value: "https://thanos-receive.openshift-user-workload-monitoring.svc:19291/api/v1/receive"
+            ports:
+              - name: metrics
+                containerPort: 9273
+                protocol: TCP
+          volumeMounts:
+            - name: telegraf-config
+              mountPath: /etc/ocudu/telegraf.conf
+              subPath: telegraf.conf
+              readOnly: true
+          readinessProbe:
+            httpGet:
+              path: /metrics
+              port: 9273
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            timeoutSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /metrics
+              port: 9273
+            initialDelaySeconds: 60
+            periodSeconds: 30
+            timeoutSeconds: 5
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: "1"
+              memory: 512Mi
+      volumes:
+        - name: telegraf-config
+          configMap:
+            name: ocudu-telegraf

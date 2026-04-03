@@ -1,0 +1,19 @@
+# ClusterIP Service to reach gNB remote_control / WebSocket metrics (port 8001) from Telegraf.
+# Matches the pod label used by kds/bos2/ocudu/50-wait-for-ocudu.sh.
+apiVersion: v1
+kind: Service
+metadata:
+  name: ocudu-gnb-remote-control
+  namespace: ocudu
+  labels:
+    app.kubernetes.io/name: ocudu-gnb
+    app.kubernetes.io/component: remote-control
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: ocudu-gnb
+  ports:
+    - name: remote-control
+      port: 8001
+      targetPort: 8001
+      protocol: TCP
