@@ -177,6 +177,60 @@ oc run curl-tg --rm -i --restart=Never -n ocudu --image=curlimages/curl -- \
   curl -s http://ocudu-telegraf.ocudu.svc:9273/metrics | head
 ```
 
+## Available metrics
+
+These **`__name__`** values are typical of the **cell** and **DU MAC** measurements Telegraf exposes after parsing gNB JSON (see **`20-telegraf-configmap.yaml`** **`[[inputs.execd.xpath]]`** for **`cell`** and related paths). Your live set can differ with gNB version, config, or load; use [**How to query and report data**](#how-to-query-and-report-data) to list names from Prometheus.
+
+| Metric | Area |
+|--------|------|
+| `cell_average_latency` | Cell |
+| `cell_avg_prach_delay` | Cell |
+| `cell_error_indication_count` | Cell |
+| `cell_late_dl_harqs` | Cell |
+| `cell_late_ul_harqs` | Cell |
+| `cell_latency_histogram_0` | Cell (latency histogram bucket) |
+| `cell_latency_histogram_1` | Cell (latency histogram bucket) |
+| `cell_latency_histogram_2` | Cell (latency histogram bucket) |
+| `cell_latency_histogram_3` | Cell (latency histogram bucket) |
+| `cell_latency_histogram_4` | Cell (latency histogram bucket) |
+| `cell_latency_histogram_5` | Cell (latency histogram bucket) |
+| `cell_latency_histogram_6` | Cell (latency histogram bucket) |
+| `cell_latency_histogram_7` | Cell (latency histogram bucket) |
+| `cell_latency_histogram_8` | Cell (latency histogram bucket) |
+| `cell_latency_histogram_9` | Cell (latency histogram bucket) |
+| `cell_max_latency` | Cell |
+| `cell_msg3_nof_nok` | Cell |
+| `cell_msg3_nof_ok` | Cell |
+| `cell_nof_failed_pdcch_allocs` | Cell |
+| `cell_nof_failed_uci_allocs` | Cell |
+| `cell_pci` | Cell |
+| `cell_pdsch_prbs_used_per_tdd_slot_idx_0` | Cell (PDSCH PRBs per TDD slot index) |
+| `cell_pdsch_prbs_used_per_tdd_slot_idx_1` | Cell (PDSCH PRBs per TDD slot index) |
+| `cell_pdsch_prbs_used_per_tdd_slot_idx_2` | Cell (PDSCH PRBs per TDD slot index) |
+| `cell_pdsch_prbs_used_per_tdd_slot_idx_3` | Cell (PDSCH PRBs per TDD slot index) |
+| `cell_pdsch_prbs_used_per_tdd_slot_idx_4` | Cell (PDSCH PRBs per TDD slot index) |
+| `cell_pdsch_prbs_used_per_tdd_slot_idx_5` | Cell (PDSCH PRBs per TDD slot index) |
+| `cell_pdsch_prbs_used_per_tdd_slot_idx_6` | Cell (PDSCH PRBs per TDD slot index) |
+| `cell_pdsch_prbs_used_per_tdd_slot_idx_7` | Cell (PDSCH PRBs per TDD slot index) |
+| `cell_pdsch_prbs_used_per_tdd_slot_idx_8` | Cell (PDSCH PRBs per TDD slot index) |
+| `cell_pdsch_prbs_used_per_tdd_slot_idx_9` | Cell (PDSCH PRBs per TDD slot index) |
+| `cell_pucch_tot_rb_usage_avg` | Cell |
+| `cell_pusch_prbs_used_per_tdd_slot_idx_0` | Cell (PUSCH PRBs per TDD slot index) |
+| `cell_pusch_prbs_used_per_tdd_slot_idx_1` | Cell (PUSCH PRBs per TDD slot index) |
+| `cell_pusch_prbs_used_per_tdd_slot_idx_2` | Cell (PUSCH PRBs per TDD slot index) |
+| `cell_pusch_prbs_used_per_tdd_slot_idx_3` | Cell (PUSCH PRBs per TDD slot index) |
+| `cell_pusch_prbs_used_per_tdd_slot_idx_4` | Cell (PUSCH PRBs per TDD slot index) |
+| `cell_pusch_prbs_used_per_tdd_slot_idx_5` | Cell (PUSCH PRBs per TDD slot index) |
+| `cell_pusch_prbs_used_per_tdd_slot_idx_6` | Cell (PUSCH PRBs per TDD slot index) |
+| `cell_pusch_prbs_used_per_tdd_slot_idx_7` | Cell (PUSCH PRBs per TDD slot index) |
+| `cell_pusch_prbs_used_per_tdd_slot_idx_8` | Cell (PUSCH PRBs per TDD slot index) |
+| `cell_pusch_prbs_used_per_tdd_slot_idx_9` | Cell (PUSCH PRBs per TDD slot index) |
+| `du_du_high_mac_dl_0_average_latency_us` | DU (MAC DL) |
+| `du_du_high_mac_dl_0_cpu_usage_percent` | DU (MAC DL) |
+| `du_du_high_mac_dl_0_max_latency_us` | DU (MAC DL) |
+| `du_du_high_mac_dl_0_min_latency_us` | DU (MAC DL) |
+| `du_du_high_mac_dl_1_pci` | DU (MAC DL) |
+
 ## Optional: Prometheus remote_write
 
 The image entrypoint loads **`/etc/ocudu/telegraf-ocp-remote-write.conf`** when **`PROMETHEUS_REMOTE_WRITE_URL`** is non-empty (see upstream [telegraf-ocp-remote-write.conf](https://github.com/colonwq/ocudu/blob/dev/docker/telegraf/telegraf-ocp-remote-write.conf)). You can add that environment variable to **`30-telegraf-deployment.yaml`** (or patch the Deployment) to push metrics to a remote-write receiver (e.g. Thanos receive, Mimir). Many in-cluster endpoints require **TLS** and a **bearer token**; wire those via Secrets and extra env or a custom config fragment as needed.
