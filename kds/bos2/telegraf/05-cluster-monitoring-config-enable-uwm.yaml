@@ -1,0 +1,28 @@
+# One-time cluster change (cluster-admin): enables User Workload Monitoring (UWM).
+#
+# Without this, only platform Prometheus (prometheus-k8s in openshift-monitoring) runs.
+# It does not scrape ServiceMonitors in user namespaces like ocudu, so Observe → Metrics
+# and targets in prometheus-k8s will never show ocudu.
+#
+# After apply, wait for the operator to create openshift-user-workload-monitoring and
+# prometheus-user-workload-* pods (often several minutes on SNO).
+#
+# If cluster-monitoring-config already exists, merge enableUserWorkload into its existing
+# config.yaml instead of replacing this file blindly.
+#
+# Apply:
+#   oc apply -f 05-cluster-monitoring-config-enable-uwm.yaml
+#
+# Verify:
+#   oc get ns openshift-user-workload-monitoring
+#   oc get pods -n openshift-user-workload-monitoring
+#   oc exec -n openshift-user-workload-monitoring prometheus-user-workload-0 -c prometheus -- \
+#     curl -sG 'http://localhost:9090/api/v1/targets' | jq '.data.activeTargets[] | select(.labels.namespace=="ocudu")'
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cluster-monitoring-config
+  namespace: openshift-monitoring
+data:
+  config.yaml: |
+    enableUserWorkload: true

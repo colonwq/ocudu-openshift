@@ -8,11 +8,10 @@
 #     (see ocudu 40-values-override.yaml).
 #
 # OpenShift Prometheus integration:
-#   - This bundle labels namespace ocudu with openshift.io/cluster-monitoring=true so the
-#     platform monitoring stack can discover ServiceMonitors there (typical SNO / lab).
-#   - If you rely on User Workload Monitoring only, enable enableUserWorkload in
-#     openshift-monitoring/cluster-monitoring-config and ensure your UWM Prometheus
-#     discovers ServiceMonitors in ocudu (often the default when UWM is enabled).
+#   - prometheus-k8s (openshift-monitoring) does NOT scrape ServiceMonitors in ocudu.
+#   - Enable User Workload Monitoring: apply 05-cluster-monitoring-config-enable-uwm.yaml
+#     (cluster-admin, once per cluster), wait for openshift-user-workload-monitoring pods.
+#   - This script labels namespace ocudu openshift.io/cluster-monitoring=true for UWM discovery.
 #
 # Optional remote_write (same as colonwq/ocudu image entrypoint): set
 #   PROMETHEUS_REMOTE_WRITE_URL in 40-telegraf-deployment.yaml or patch the Deployment.
