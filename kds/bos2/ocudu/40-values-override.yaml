@@ -143,11 +143,13 @@ config:
 
     metrics:
       autostart_stdout_metrics: true
-      enable_json: false
+      enable_json: true
+      enable_log: true
+      enable_verbose: true
 
     remote_control:
       bind_addr: 0.0.0.0
-      enabled: false
+      enabled: true
       port: 8001
 
 #    test_mode:
