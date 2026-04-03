@@ -64,6 +64,119 @@ Deletes the objects created from the YAML files (ServiceMonitor, Services, Deplo
 - **Namespace `ocudu`**: must be eligible for **User Workload Monitoring**. `00-install-telegraf.sh` sets **`openshift.io/user-monitoring=true`**. The **`openshift.io/cluster-monitoring=true`** label **must not** be set on `ocudu`: the **`user-workload`** Prometheus **`serviceMonitorNamespaceSelector`** excludes namespaces where that label is **`true`** (see [cluster-monitoring-operator](https://github.com/openshift/cluster-monitoring-operator) `assets/prometheus-user-workload/prometheus.yaml`).
 - **UWM**: For metrics in **Observe → Metrics** and **`up{namespace="ocudu"}`**, enable UWM (**`05-cluster-monitoring-config-enable-uwm.yaml`**). Inspect targets on **`prometheus-user-workload-0`**, not **`prometheus-k8s-0`**.
 
+## How to verify telegraf is reporting
+
+Check **User Workload Monitoring** Prometheus, not **`prometheus-k8s`**: **`openshift-monitoring`** does not scrape the **`ocudu`** `ServiceMonitor`.
+
+**1. Scrape target health** — expect **`"up"`** for the Telegraf job in **`ocudu`**:
+
+```bash
+oc exec -n openshift-user-workload-monitoring prometheus-user-workload-0 -c prometheus -- \
+  curl -sG 'http://127.0.0.1:9090/api/v1/targets' \
+  | jq '.data.activeTargets[] | select(.labels.namespace=="ocudu") | .health'
+```
+
+Example output:
+
+```text
+"up"
+```
+
+For more detail (URL, last error), print the whole selected object:
+
+```bash
+oc exec -n openshift-user-workload-monitoring prometheus-user-workload-0 -c prometheus -- \
+  curl -sG 'http://127.0.0.1:9090/api/v1/targets' \
+  | jq '.data.activeTargets[] | select(.labels.namespace=="ocudu")'
+```
+
+**2. Console** — **Observe → Metrics** → run:
+
+```promql
+up{namespace="ocudu"}
+```
+
+When scraping works, the value is **`1`**.
+
+If the target is **down** or **`up`** is **`0`**, confirm **`openshift.io/user-monitoring=true`** on **`ocudu`**, that **`openshift.io/cluster-monitoring`** is **not** set on **`ocudu`**, and that Telegraf serves metrics: **`curl -s http://ocudu-telegraf.ocudu.svc:9273/metrics`** from a pod in **`ocudu`**.
+
+## How to query and report data
+
+After verification (**How to verify telegraf is reporting**), use the options below to list metric names, inspect values, and explore series.
+
+All **`oc exec … prometheus-user-workload-0`** examples assume the UWM pod name **`prometheus-user-workload-0`** in **`openshift-user-workload-monitoring`** (adjust if your cluster uses a different ordinal).
+
+### List metric names (`__name__`) in `ocudu`
+
+Prometheus HTTP API: label values for **`__name__`**, restricted to series in **`ocudu`**:
+
+```bash
+oc exec -n openshift-user-workload-monitoring prometheus-user-workload-0 -c prometheus -- \
+  sh -c "curl -sG 'http://127.0.0.1:9090/api/v1/label/__name__/values' \
+  --data-urlencode 'match[]={namespace=\"ocudu\"}'" | jq -r '.data[]' | sort -u
+```
+
+### Query a specific metric (instant vector)
+
+Replace the metric name with one from the list above (Telegraf often exposes names such as **`cell_*`** from the gNB JSON pipeline):
+
+```bash
+oc exec -n openshift-user-workload-monitoring prometheus-user-workload-0 -c prometheus -- \
+  curl -sG 'http://127.0.0.1:9090/api/v1/query' \
+  --data-urlencode 'query=cell_average_latency{namespace="ocudu"}' | jq .
+```
+
+Use **`/api/v1/query_range`** with **`start`**, **`end`**, and **`step`** parameters when you need a time range.
+
+### OpenShift console (**Observe → Metrics**)
+
+Run PromQL scoped to the namespace, for example:
+
+```promql
+{namespace="ocudu"}
+```
+
+Or narrow by name pattern:
+
+```promql
+{namespace="ocudu", __name__=~"cell_.*"}
+```
+
+Use the UI’s metric picker or autocomplete where available (behavior depends on console version and whether queries go through Thanos).
+
+### PromQL aggregations
+
+Count series by scrape **`job`**:
+
+```promql
+count by (job) ({namespace="ocudu"})
+```
+
+See which metric names contribute the most series (useful when cardinality is manageable):
+
+```promql
+topk(20, count by (__name__) ({namespace="ocudu"}))
+```
+
+### List series and full label sets
+
+**`/api/v1/series`** returns matching series with all labels; the result can be large. Example capped at 20 entries in **`jq`**:
+
+```bash
+oc exec -n openshift-user-workload-monitoring prometheus-user-workload-0 -c prometheus -- \
+  sh -c "curl -sG 'http://127.0.0.1:9090/api/v1/series' \
+  --data-urlencode 'match[]={namespace=\"ocudu\"}'" | jq '.data[:20]'
+```
+
+### Direct check from Telegraf (bypass Prometheus)
+
+To confirm exposition before or independently of scraping:
+
+```bash
+oc run curl-tg --rm -i --restart=Never -n ocudu --image=curlimages/curl -- \
+  curl -s http://ocudu-telegraf.ocudu.svc:9273/metrics | head
+```
+
 ## Optional: Prometheus remote_write
 
 The image entrypoint loads **`/etc/ocudu/telegraf-ocp-remote-write.conf`** when **`PROMETHEUS_REMOTE_WRITE_URL`** is non-empty (see upstream [telegraf-ocp-remote-write.conf](https://github.com/colonwq/ocudu/blob/dev/docker/telegraf/telegraf-ocp-remote-write.conf)). You can add that environment variable to **`30-telegraf-deployment.yaml`** (or patch the Deployment) to push metrics to a remote-write receiver (e.g. Thanos receive, Mimir). Many in-cluster endpoints require **TLS** and a **bearer token**; wire those via Secrets and extra env or a custom config fragment as needed.
