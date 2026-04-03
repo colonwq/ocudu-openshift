@@ -15,7 +15,7 @@ CHART_TGZ="${SCRIPT_DIR}/ocudu-gnb-${CHART_VERSION}.tgz"
 get_image_tag() {
   case "$1" in
     f) echo "20260401f01" ;;
-    c) echo "20260401fc01" ;;
+    c) echo "20260401c01" ;;
     u) echo "20260306u01" ;;
     r) echo "20260401r01" ;;
     *) echo "20260401f01" ;;  # default

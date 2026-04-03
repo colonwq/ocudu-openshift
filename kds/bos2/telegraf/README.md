@@ -46,7 +46,7 @@ Deletes the objects created from the YAML files (ServiceMonitor, Services, Deplo
 | File | Kind | What it does |
 |------|------|----------------|
 | `10-ocudu-gnb-remote-control-svc.yaml` | `Service` | **`ocudu-gnb-remote-control`** in `ocudu`: ClusterIP to gNB pods on **8001** (`remote_control` / WebSocket). |
-| `20-telegraf-configmap.yaml` | `ConfigMap` **`ocudu-telegraf`** | **`telegraf.conf`**: same **inputs** pattern as upstream ocudu Telegraf (execd + xpath for UE/cell/OFH/CU-CP, etc.), but **outputs** are **`prometheus_client`** on **9273** and **`health`**—no InfluxDB requirement on-cluster. |
+| `20-telegraf-configmap.yaml` | `ConfigMap` **`ocudu-telegraf`** | **`telegraf.conf`**: same **inputs** pattern as upstream ocudu Telegraf (execd + xpath for UE/cell/OFH/CU-CP, etc.), but **outputs** are only **`prometheus_client`** on **9273** (no **`health`** output: it would also bind **9273** and conflict). No InfluxDB on-cluster. |
 | `30-telegraf-deployment.yaml` | `Deployment` **`ocudu-telegraf`** | Runs the Telegraf container, sets **`WS_URL`** to the gNB Service above, mounts the ConfigMap over **`/etc/ocudu/telegraf.conf`**, exposes **9273**, probes **`/metrics`**. |
 | `40-telegraf-service.yaml` | `Service` **`ocudu-telegraf`** | ClusterIP **9273** → Telegraf pod (`metrics` port). |
 | `50-servicemonitor.yaml` | `ServiceMonitor` **`ocudu-telegraf`** | Scrape **`/metrics`** on port **`metrics`** every **30s**. Label **`openshift.io/cluster-monitoring: "true"`** matches platform monitoring’s discovery rules. |

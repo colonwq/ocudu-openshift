@@ -115,27 +115,5 @@ data:
      expiration_interval = "120s"
      namedrop = ["internal_*"]
 
-    [[outputs.health]]
-     service_address = "http://:9273"
-     namepass = ["internal_write"]
-     tagpass = { output = ["prometheus_client"] }
-
-     [[outputs.health.compares]]
-     field = "metrics_written"
-     gt = 0.0
-
-     [[outputs.health.compares]]
-     field = "metrics_dropped"
-     eq = 0.0
-
-     [[outputs.health.compares]]
-     field = "errors"
-     eq = 0.0
-
-     [[outputs.health.compares]]
-     field = "startup_errors"
-     eq = 0.0
-
-     [[outputs.health.compares]]
-     field = "metrics_rejected"
-     eq = 0.0
+    # No [[outputs.health]]: upstream binds service_address to :9273, same as prometheus_client,
+    # which causes "address already in use". Kubernetes probes use /metrics on 9273 instead.
