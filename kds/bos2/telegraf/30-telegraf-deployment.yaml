@@ -36,14 +36,11 @@ spec:
               value: "5s"
             - name: TELEGRAF_QUIET
               value: "true"
-            # Optional: non-empty value loads image-bundled /etc/ocudu/telegraf-ocp-remote-write.conf
-            # Example (adjust for your receiver; often needs TLS + token via custom Secret/config):
-            # - name: PROMETHEUS_REMOTE_WRITE_URL
-            #   value: "https://thanos-receive.openshift-user-workload-monitoring.svc:19291/api/v1/receive"
-            ports:
-              - name: metrics
-                containerPort: 9273
-                protocol: TCP
+            # Optional: set PROMETHEUS_REMOTE_WRITE_URL to load telegraf-ocp-remote-write.conf from the image.
+          ports:
+            - name: metrics
+              containerPort: 9273
+              protocol: TCP
           volumeMounts:
             - name: telegraf-config
               mountPath: /etc/ocudu/telegraf.conf
