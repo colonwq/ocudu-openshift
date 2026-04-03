@@ -9,12 +9,13 @@
 #
 # OpenShift Prometheus integration:
 #   - prometheus-k8s (openshift-monitoring) does NOT scrape ServiceMonitors in ocudu.
-#   - Enable User Workload Monitoring: apply 05-cluster-monitoring-config-enable-uwm.yaml
-#     (cluster-admin, once per cluster), wait for openshift-user-workload-monitoring pods.
-#   - This script labels namespace ocudu openshift.io/cluster-monitoring=true for UWM discovery.
+#   - This script applies 05-cluster-monitoring-config-enable-uwm.yaml only if
+#     cluster-monitoring-config does not exist yet (avoids overwriting a custom config.yaml).
+#     Requires cluster-admin; wait for openshift-user-workload-monitoring pods after first apply.
+#   - Labels namespace ocudu openshift.io/cluster-monitoring=true for UWM discovery.
 #
 # Optional remote_write (same as colonwq/ocudu image entrypoint): set
-#   PROMETHEUS_REMOTE_WRITE_URL in 40-telegraf-deployment.yaml or patch the Deployment.
+#   PROMETHEUS_REMOTE_WRITE_URL in 30-telegraf-deployment.yaml or patch the Deployment.
 #   The image loads /etc/ocudu/telegraf-ocp-remote-write.conf when that variable is set.
 #   Many in-cluster receivers need TLS and a bearer token; configure accordingly.
 
@@ -22,6 +23,17 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
+
+MON_NS="openshift-monitoring"
+MON_CM="cluster-monitoring-config"
+if oc get configmap "$MON_CM" -n "$MON_NS" >/dev/null 2>&1; then
+  echo "ConfigMap $MON_CM already exists in $MON_NS; skipping 05-cluster-monitoring-config-enable-uwm.yaml"
+  echo "  If Observe → Metrics still has no ocudu series, ensure config.yaml includes enableUserWorkload: true"
+else
+  echo "Applying $MON_CM to enable User Workload Monitoring (cluster-wide; cluster-admin required)"
+  oc apply -f 05-cluster-monitoring-config-enable-uwm.yaml
+  echo "  Wait for pods: oc get pods -n openshift-user-workload-monitoring"
+fi
 
 echo "Labeling namespace ocudu for cluster monitoring (ServiceMonitor discovery)"
 oc label namespace ocudu openshift.io/cluster-monitoring=true --overwrite

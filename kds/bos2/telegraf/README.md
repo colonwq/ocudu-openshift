@@ -32,12 +32,13 @@ You need **User Workload Monitoring (UWM)** enabled so **`prometheus-user-worklo
 
 Main installer. It:
 
-1. **`oc label namespace ocudu openshift.io/cluster-monitoring=true --overwrite`**  
-   Allows the **platform** monitoring stack to discover **ServiceMonitor** objects in `ocudu` (common on lab / SNO clusters).
+1. **`oc apply -f 05-cluster-monitoring-config-enable-uwm.yaml`** if **`cluster-monitoring-config`** is not already present in **`openshift-monitoring`** (enables UWM without overwriting an existing **`config.yaml`**).
 
-2. **`oc apply`** of the YAML files in dependency order: gNB Service → ConfigMap → Deployment → Telegraf Service → ServiceMonitor.
+2. **`oc label namespace ocudu openshift.io/cluster-monitoring=true --overwrite`** for user workload monitoring discovery.
 
-3. Runs **`./60-wait-for-telegraf.sh`** to wait for the Deployment rollout and a Ready pod.
+3. **`oc apply`** of the remaining YAML files: gNB Service → ConfigMap → Deployment → Telegraf Service → ServiceMonitor.
+
+4. Runs **`./60-wait-for-telegraf.sh`** to wait for the Deployment rollout and a Ready pod.
 
 ### `60-wait-for-telegraf.sh`
 
@@ -69,19 +70,12 @@ The image entrypoint loads **`/etc/ocudu/telegraf-ocp-remote-write.conf`** when 
 
 ## Quick start
 
-**If UWM is not enabled yet** (typical fresh cluster: no `openshift-user-workload-monitoring` namespace):
-
-```bash
-oc apply -f kds/bos2/telegraf/05-cluster-monitoring-config-enable-uwm.yaml
-# wait until: oc get pods -n openshift-user-workload-monitoring
-```
-
-**Deploy Telegraf:**
-
 ```bash
 cd kds/bos2/telegraf
 ./00-install-telegraf.sh
 ```
+
+**`00-install-telegraf.sh`** applies **`05-cluster-monitoring-config-enable-uwm.yaml`** when **`cluster-monitoring-config`** is **missing** in **`openshift-monitoring`** (cluster-admin). If that ConfigMap **already exists**, the script skips the file so it does not replace your **`config.yaml`**; merge **`enableUserWorkload: true`** yourself if UWM is not on yet. After the first UWM enable, wait until **`oc get pods -n openshift-user-workload-monitoring`** shows **Ready** Prometheus pods before expecting **Observe → Metrics** to show **`ocudu`**.
 
 To remove this stack (keeping the `ocudu` namespace and gNB):
 
