@@ -9,8 +9,19 @@ cd "$SCRIPT_DIR"
 
 FAILURES=0
 
-pass() { echo "  OK  $*"; }
-fail() { echo "  FAIL $*" >&2; FAILURES=$((FAILURES + 1)); }
+# Colors when a terminal is attached and NO_COLOR is unset (https://no-color.org/)
+if [[ -z "${NO_COLOR:-}" ]] && { [[ -t 1 ]] || [[ -t 2 ]]; }; then
+  GREEN='\033[0;32m'
+  RED='\033[0;31m'
+  NC='\033[0m'
+else
+  GREEN=''
+  RED=''
+  NC=''
+fi
+
+pass() { printf '  %b✓%b %s\n' "$GREEN" "$NC" "$*"; }
+fail() { printf '  %b✗%b %s\n' "$RED" "$NC" "$*" >&2; FAILURES=$((FAILURES + 1)); }
 
 oc_get() {
   oc get "$@" &>/dev/null
@@ -144,8 +155,8 @@ fi
 
 echo
 if [[ "$FAILURES" -eq 0 ]]; then
-  echo "=== All checks passed ==="
+  printf '%b=== All checks passed ===%b\n' "$GREEN" "$NC"
   exit 0
 fi
-echo "=== $FAILURES check(s) failed ===" >&2
+printf '%b=== %s check(s) failed ===%b\n' "$RED" "$FAILURES" "$NC" >&2
 exit 1
