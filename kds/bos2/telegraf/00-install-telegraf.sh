@@ -12,7 +12,10 @@
 #   - This script applies 05-cluster-monitoring-config-enable-uwm.yaml only if
 #     cluster-monitoring-config does not exist yet (avoids overwriting a custom config.yaml).
 #     Requires cluster-admin; wait for openshift-user-workload-monitoring pods after first apply.
-#   - Labels namespace ocudu openshift.io/cluster-monitoring=true for UWM discovery.
+#   - Labels namespace ocudu openshift.io/user-monitoring=true for UWM discovery.
+#     Do NOT set openshift.io/cluster-monitoring=true on ocudu: user-workload Prometheus
+#     explicitly excludes namespaces with that label (see cluster-monitoring-operator
+#     prometheus user-workload serviceMonitorNamespaceSelector).
 #
 # Optional remote_write (same as colonwq/ocudu image entrypoint): set
 #   PROMETHEUS_REMOTE_WRITE_URL in 30-telegraf-deployment.yaml or patch the Deployment.
@@ -35,8 +38,10 @@ else
   echo "  Wait for pods: oc get pods -n openshift-user-workload-monitoring"
 fi
 
-echo "Labeling namespace ocudu for cluster monitoring (ServiceMonitor discovery)"
-oc label namespace ocudu openshift.io/cluster-monitoring=true --overwrite
+echo "Labeling namespace ocudu for User Workload Monitoring (UWM) ServiceMonitor discovery"
+oc label namespace ocudu openshift.io/user-monitoring=true --overwrite
+# UWM prometheus excludes namespaces labeled openshift.io/cluster-monitoring=true
+oc label namespace ocudu openshift.io/cluster-monitoring- 2>/dev/null || true
 
 echo "Applying gNB remote-control Service (port 8001) for Telegraf WebSocket"
 oc apply -f 10-ocudu-gnb-remote-control-svc.yaml

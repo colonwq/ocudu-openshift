@@ -34,7 +34,7 @@ Main installer. It:
 
 1. **`oc apply -f 05-cluster-monitoring-config-enable-uwm.yaml`** if **`cluster-monitoring-config`** is not already present in **`openshift-monitoring`** (enables UWM without overwriting an existing **`config.yaml`**).
 
-2. **`oc label namespace ocudu openshift.io/cluster-monitoring=true --overwrite`** for user workload monitoring discovery.
+2. **`oc label namespace ocudu openshift.io/user-monitoring=true --overwrite`** and **removes** **`openshift.io/cluster-monitoring`** if present (that label **excludes** the namespace from user-workload Prometheus; see OpenShift `user-workload` Prometheus **`serviceMonitorNamespaceSelector`**).
 
 3. **`oc apply`** of the remaining YAML files: gNB Service → ConfigMap → Deployment → Telegraf Service → ServiceMonitor.
 
@@ -46,7 +46,7 @@ Waits for **`deployment/ocudu-telegraf`** to finish rolling out, then **`oc wait
 
 ### `99-uninstall-telegraf.sh`
 
-Deletes the objects created from the YAML files (ServiceMonitor, Services, Deployment, ConfigMap), in an order safe for Kubernetes references. It does **not** remove the **`openshift.io/cluster-monitoring`** label from `ocudu` automatically; the script prints the optional `oc label … -` command if you want to remove it and nothing else in that namespace needs cluster monitoring.
+Deletes the objects created from the YAML files (ServiceMonitor, Services, Deployment, ConfigMap), in an order safe for Kubernetes references. It does **not** remove **`openshift.io/user-monitoring`** from `ocudu` automatically; the script prints the optional `oc label … -` command if you want to remove it.
 
 ## YAML manifests (apply order)
 
@@ -56,13 +56,13 @@ Deletes the objects created from the YAML files (ServiceMonitor, Services, Deplo
 | `20-telegraf-configmap.yaml` | `ConfigMap` **`ocudu-telegraf`** | **`telegraf.conf`**: same **inputs** pattern as upstream ocudu Telegraf (execd + xpath for UE/cell/OFH/CU-CP, etc.), but **outputs** are only **`prometheus_client`** on **9273** (no **`health`** output: it would also bind **9273** and conflict). No InfluxDB on-cluster. |
 | `30-telegraf-deployment.yaml` | `Deployment` **`ocudu-telegraf`** | Runs the Telegraf container, sets **`WS_URL`** to the gNB Service above, mounts the ConfigMap over **`/etc/ocudu/telegraf.conf`**, sets **`TELEGRAF_CLI_EXTRA_ARGS=--output-filter prometheus_client`** so only the Prometheus output runs (ignores **`[[outputs.health]]`** if the image default config is still used), exposes **9273**, probes **`/metrics`**. If you enable **`PROMETHEUS_REMOTE_WRITE_URL`**, change the filter to **`prometheus_client:http`**. |
 | `40-telegraf-service.yaml` | `Service` **`ocudu-telegraf`** | ClusterIP **9273** → Telegraf pod (`metrics` port). |
-| `50-servicemonitor.yaml` | `ServiceMonitor` **`ocudu-telegraf`** | Scrape **`/metrics`** on port **`metrics`** every **30s**. Label **`openshift.io/cluster-monitoring: "true"`** aligns with how the monitoring operator selects user workload targets together with the namespace label. |
+| `50-servicemonitor.yaml` | `ServiceMonitor` **`ocudu-telegraf`** | Scrape **`/metrics`** on port **`metrics`** every **30s**. Label **`openshift.io/user-monitoring: "true"`** matches UWM expectations; namespace must **not** use **`openshift.io/cluster-monitoring=true`** or UWM ignores the project. |
 | `05-cluster-monitoring-config-enable-uwm.yaml` | `ConfigMap` **`cluster-monitoring-config`** | **Optional, cluster-wide (cluster-admin):** sets **`enableUserWorkload: true`** so **`openshift-user-workload-monitoring`** and **`prometheus-user-workload-*`** exist. **Do not** overwrite an existing `cluster-monitoring-config` without merging into its `config.yaml`. |
 
 ## OpenShift Prometheus notes
 
-- **Namespace `ocudu`**: `00-install-telegraf.sh` sets **`openshift.io/cluster-monitoring=true`** so user workload collection can include this project (required pattern for user-defined metrics in supported configurations).
-- **UWM**: For metrics to appear in **Observe → Metrics** and in **`up{namespace="ocudu"}`**, **User Workload Monitoring** must be enabled (see **`05-cluster-monitoring-config-enable-uwm.yaml`**). Checking **`prometheus-k8s-0`** targets for **`ocudu`** will stay empty; use **`prometheus-user-workload-0`** in **`openshift-user-workload-monitoring`** after UWM is ready.
+- **Namespace `ocudu`**: must be eligible for **User Workload Monitoring**. `00-install-telegraf.sh` sets **`openshift.io/user-monitoring=true`**. The **`openshift.io/cluster-monitoring=true`** label **must not** be set on `ocudu`: the **`user-workload`** Prometheus **`serviceMonitorNamespaceSelector`** excludes namespaces where that label is **`true`** (see [cluster-monitoring-operator](https://github.com/openshift/cluster-monitoring-operator) `assets/prometheus-user-workload/prometheus.yaml`).
+- **UWM**: For metrics in **Observe → Metrics** and **`up{namespace="ocudu"}`**, enable UWM (**`05-cluster-monitoring-config-enable-uwm.yaml`**). Inspect targets on **`prometheus-user-workload-0`**, not **`prometheus-k8s-0`**.
 
 ## Optional: Prometheus remote_write
 
