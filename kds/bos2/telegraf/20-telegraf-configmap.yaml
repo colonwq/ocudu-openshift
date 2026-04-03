@@ -1,5 +1,5 @@
 # Telegraf config: same inputs as colonwq/ocudu docker/telegraf/telegraf.conf (WebSocket JSON via ws_adapter).
-# Outputs: prometheus_client + health only (no InfluxDB required on-cluster).
+# Outputs: prometheus_client only (no InfluxDB on-cluster). outputs.health is omitted (port conflict with :9273).
 # Source reference: https://github.com/colonwq/ocudu/tree/dev/docker/telegraf
 apiVersion: v1
 kind: ConfigMap

@@ -47,7 +47,7 @@ Deletes the objects created from the YAML files (ServiceMonitor, Services, Deplo
 |------|------|----------------|
 | `10-ocudu-gnb-remote-control-svc.yaml` | `Service` | **`ocudu-gnb-remote-control`** in `ocudu`: ClusterIP to gNB pods on **8001** (`remote_control` / WebSocket). |
 | `20-telegraf-configmap.yaml` | `ConfigMap` **`ocudu-telegraf`** | **`telegraf.conf`**: same **inputs** pattern as upstream ocudu Telegraf (execd + xpath for UE/cell/OFH/CU-CP, etc.), but **outputs** are only **`prometheus_client`** on **9273** (no **`health`** output: it would also bind **9273** and conflict). No InfluxDB on-cluster. |
-| `30-telegraf-deployment.yaml` | `Deployment` **`ocudu-telegraf`** | Runs the Telegraf container, sets **`WS_URL`** to the gNB Service above, mounts the ConfigMap over **`/etc/ocudu/telegraf.conf`**, exposes **9273**, probes **`/metrics`**. |
+| `30-telegraf-deployment.yaml` | `Deployment` **`ocudu-telegraf`** | Runs the Telegraf container, sets **`WS_URL`** to the gNB Service above, mounts the ConfigMap over **`/etc/ocudu/telegraf.conf`**, sets **`TELEGRAF_CLI_EXTRA_ARGS=--output-filter prometheus_client`** so only the Prometheus output runs (ignores **`[[outputs.health]]`** if the image default config is still used), exposes **9273**, probes **`/metrics`**. If you enable **`PROMETHEUS_REMOTE_WRITE_URL`**, change the filter to **`prometheus_client:http`**. |
 | `40-telegraf-service.yaml` | `Service` **`ocudu-telegraf`** | ClusterIP **9273** → Telegraf pod (`metrics` port). |
 | `50-servicemonitor.yaml` | `ServiceMonitor` **`ocudu-telegraf`** | Scrape **`/metrics`** on port **`metrics`** every **30s**. Label **`openshift.io/cluster-monitoring: "true"`** matches platform monitoring’s discovery rules. |
 

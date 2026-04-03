@@ -36,6 +36,12 @@ spec:
               value: "5s"
             - name: TELEGRAF_QUIET
               value: "true"
+            # Image-baked /etc/ocudu/telegraf.conf may still include [[outputs.health]] if the ConfigMap mount
+            # is missing or stale. The entrypoint passes $TELEGRAF_CLI_EXTRA_ARGS to telegraf; restrict outputs
+            # so only prometheus_client runs (avoids health binding :9273 twice).
+            # If you set PROMETHEUS_REMOTE_WRITE_URL, allow the http output too: "prometheus_client:http"
+            - name: TELEGRAF_CLI_EXTRA_ARGS
+              value: "--output-filter prometheus_client"
             # Optional: set PROMETHEUS_REMOTE_WRITE_URL to load telegraf-ocp-remote-write.conf from the image.
           ports:
             - name: metrics
