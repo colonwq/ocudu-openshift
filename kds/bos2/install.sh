@@ -17,5 +17,8 @@ echo "Calling the open5gs install"
 echo "Calling the ocudu install"
 ./ocudu/00-install-ocudu.sh
 
+echo "Calling the telegraf install (metrics → User Workload Monitoring; see telegraf/README.md)"
+./telegraf/00-install-telegraf.sh
+
 echo "Calling the ruemulator install"
 ./ru_emulator/00-install-ru-emulator.sh

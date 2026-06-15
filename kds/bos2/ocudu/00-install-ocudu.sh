@@ -12,6 +12,7 @@ validate_platform() {
     f|fedora)  echo "f" ;;
     c|centos)  echo "c" ;;
     r|redhat)  echo "r" ;;
+    h|hummingbird)  echo "h" ;;
     u|ubuntu)  echo "u" ;;
     *)         echo "" ;;
   esac

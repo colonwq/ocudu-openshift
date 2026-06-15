@@ -58,6 +58,12 @@ oc get pods -n open5gs -l app.kubernetes.io/name=mongodb
 
 Optional: open the **webui** Route URL in a browser; use **`oc get route open5gs-webui-http -n open5gs -o jsonpath='{.spec.host}'`**.
 
+### Web UI: HTTP vs HTTPS and SSH tunnels
+
+**`40-webgui-route.yaml`** creates a Route **without** **`spec.tls`**, so the app is reached over **HTTP** on the generated **`*.apps.<cluster>`** hostname. If you use **`https://`** against that host, the OpenShift router may show **Application not available** even when pods are healthy. Use **`http://<route-host>`**, or add **`spec.tls`** with **`termination: edge`** on the Route if you want **HTTPS**.
+
+**SSH port forwarding** often fails for the same reason: the router selects the backend using the HTTP **`Host`** header (and **SNI** for TLS). If the tunneled request sends **`localhost`** or an IP as the host, the route may not match. Prefer reaching the route hostname **directly** from a machine that resolves **`*.apps.<cluster>`**, or configure forwarding so the client still sends the **full route hostname** (and use **HTTP** unless you add edge TLS as above).
+
 ## Uninstall
 
 ```bash

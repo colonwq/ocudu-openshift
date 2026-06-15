@@ -7,18 +7,19 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
-CHART_VERSION="3.2.0"
+CHART_VERSION="3.7.4"
 OCI_URL="oci://registry.gitlab.com/ocudu/ocudu_elements/ocudu_helm/ocudu-gnb"
 CHART_TGZ="${SCRIPT_DIR}/ocudu-gnb-${CHART_VERSION}.tgz"
 
 # Platform-to-image-tag mapping (from 00-install-ocudu.sh -p argument)
 get_image_tag() {
   case "$1" in
-    f) echo "20260401f01" ;;
+    f) echo "20260615f01" ;;
     c) echo "20260401c01" ;;
-    u) echo "20260306u01" ;;
-    r) echo "20260401r01" ;;
-    *) echo "20260401f01" ;;  # default
+    u) echo "20260609u04" ;;
+    r) echo "20260526r02" ;;
+    h) echo "20260603h02" ;;
+    *) echo "20260608f01" ;;  # default
   esac
 }
 
@@ -36,7 +37,13 @@ if [[ ! -f "$CHART_TGZ" ]]; then
   exit 1
 fi
 
+#this is for my virtual RU
+#-f 40-values-override.yaml \
+#this is for Chri's real RU
+#-f values.sno-du-4.yaml \
+
 helm install ocudu-gnb "$CHART_TGZ" \
   -f 40-values-override.yaml \
+  --set image.repository="quay.io/kschinck/gnb" \
   --set image.tag="$IMAGE_TAG" \
   -n ocudu

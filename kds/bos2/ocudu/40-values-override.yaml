@@ -3,14 +3,6 @@ image:
   #tag: "20260401f01"
   tag: "20260401f01"
 
-securityContext:
-  allowPrivilegeEscalation: true
-  privileged: true
-  runAsUser: 0
-  capabilities:
-    #add: ["SYS_PTRACE"]
-    add: ["SYS_PTRACE", "SYS_NICE", "NET_ADMIN"]
-
 persistence:
   enabled: true             # Changed from false to true
   type: pvc                 # Changed from hostPath to pvc
@@ -19,7 +11,7 @@ persistence:
     storageClassName: "lvms-vg1" # Set to your LVM storage class
     accessMode: ReadWriteOnce
     size: 5Gi              # Updated to match your earlier 20G requirement
-  mountPath: "/tmp"         # Preserved as requested
+  mountPath: "/var/log/ocudu"         # Preserved as requested
   preserveOldLogs: false
 
 imagePullSecrets: []
